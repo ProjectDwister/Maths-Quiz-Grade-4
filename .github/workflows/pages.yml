@@ -29,6 +29,8 @@ jobs:
           node-version: "22"
       - name: Validate mathematics question engine
         run: node tests/question-engine.test.js
+      - name: Validate mastery game interface
+        run: node tests/app-static.test.js
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
