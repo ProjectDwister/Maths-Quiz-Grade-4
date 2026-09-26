@@ -3,6 +3,20 @@
 
 const TOPICS=['numbers','operations','multdiv','factors','fractions','decimals','measurement','time','money','geometry','patterns','word'];
 const VARIANT_COUNTS={numbers:7,operations:5,multdiv:6,factors:6,fractions:7,decimals:7,measurement:8,time:6,money:7,geometry:10,patterns:7,word:8};
+const VARIANTS_BY_TOPIC={
+  numbers:['place-digit','place-value','roman','compare','successor-predecessor','rounding','expanded-form'],
+  operations:['direct','missing-addend','missing-subtrahend','three-addends','estimation'],
+  multdiv:['multiply','exact-division','missing-factor','missing-dividend','remainder','grouping'],
+  factors:['factor-choice','multiple','prime-composite','divisibility','hcf','lcm'],
+  fractions:['add-like','subtract-like','equivalent','compare-like','fraction-of-quantity','add-unlike','mixed-to-improper'],
+  decimals:['decimal-place','compare-decimals','decimal-add','decimal-subtract','fraction-to-decimal','decimal-to-fraction','rupees-paise-decimal'],
+  measurement:['m-cm','cm-m','kg-g','l-ml','perimeter','area','compound-length','fencing'],
+  time:['end-time','start-time','duration','hours-minutes','compound-time','clock-language'],
+  money:['remaining','total','change','quantity-price','rupees-paise','compare-money','multi-step-money'],
+  geometry:['triangle-sides','rectangle-vertices','circle','right-angles','parallel','symmetry','acute','obtuse','trapezium','ray'],
+  patterns:['add-pattern','subtract-pattern','multiply-pattern','alternating-pattern','data-maximum','data-total','data-difference'],
+  word:['addition-story','subtraction-story','multiplication-story','division-story','multiply-add','multiply-subtract','capacity-story','array-plus-extra']
+};
 const CONCEPT_META={
   'place-digit':['Place-value digits','Check the named place carefully; counting from the wrong side is a common slip.'],
   'place-value':['Place value','A digit and its place value are different: 6 in the hundreds place means 600.'],
@@ -516,7 +530,7 @@ function generateCore(t,d){
   throw new Error('Unhandled topic: '+t);
 }
 
-const api={TOPICS,TOPIC_LABELS,VARIANT_COUNTS,CONCEPT_META,generate,generateForVariant,isCorrect,validateQuestion,reduceFraction,gcd,lcm};
+const api={TOPICS,TOPIC_LABELS,VARIANT_COUNTS,VARIANTS_BY_TOPIC,CONCEPT_META,generate,generateForVariant,isCorrect,validateQuestion,reduceFraction,gcd,lcm};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 root.MathQuestionEngine=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
