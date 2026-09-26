@@ -56,6 +56,7 @@
             <h2>🔧 One-time Firebase setup needed</h2>
             <p id="authSetupText">Authentication has been added to the app, but the Firebase project configuration still needs to be connected.</p>
             <p class="muted">See <b>SETUP_FIREBASE.md</b> in the GitHub repository. Once the Firebase web configuration is pasted into <b>firebase-config.js</b>, this screen becomes the normal sign-in page.</p>
+            <button class="btn secondary guest-mode-btn">Continue on this device without sign-in</button>
           </div>
 
           <div id="authForms">
@@ -101,7 +102,8 @@
             </div>
 
             <div class="auth-message" id="authMessage"></div>
-            <p class="auth-small">Passwords are handled by Firebase Authentication and are never stored in this GitHub repository.</p>
+            <button class="link-btn guest-mode-btn">Continue on this device without an account</button>
+            <p class="auth-small">Passwords are handled by Firebase Authentication and are never stored in this GitHub repository. Guest progress stays only on this browser.</p>
           </div>
         </div>
       </div>
