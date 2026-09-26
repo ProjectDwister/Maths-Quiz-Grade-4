@@ -59,7 +59,7 @@ const weightedPick=items=>{
 
 function blankData(){
  return {
-  version:3,games:0,bestStreak:0,xp:0,coins:0,avatar:'wizard',accessory:'none',
+  version:4,localUpdatedAt:0,games:0,bestStreak:0,xp:0,coins:0,avatar:'wizard',accessory:'none',
   ownedAvatars:['wizard'],ownedAccessories:['none'],concepts:{},events:[],mistakes:{},
   settings:{length:20},daily:null
  };
@@ -127,6 +127,7 @@ function scheduleCloudSave(){
 }
 function save(){
  data.events=data.events.slice(-1500);
+ data.localUpdatedAt=now();
  localStorage.setItem(STORAGE,JSON.stringify(data));
  updateHud();
  scheduleCloudSave();
@@ -319,13 +320,14 @@ async function activateUser(user){
  try{
   const [remote,profile]=await Promise.all([MathAuth.loadProgress(),MathAuth.getProfile()]);
   currentProfile=profile||{role:'child',displayName:user.displayName||'',email:user.email||''};
+  let scopedRaw=null;
+  try{scopedRaw=JSON.parse(localStorage.getItem(STORAGE)||'null')}catch(e){}
+  const scoped=scopedRaw?normalizeData(scopedRaw):null;
   let chosen;
-  if(remote)chosen=normalizeData(remote);
-  else{
-   let scopedRaw=null;
-   try{scopedRaw=JSON.parse(localStorage.getItem(STORAGE)||'null')}catch(e){}
-   chosen=scopedRaw?normalizeData(scopedRaw):(legacyDeviceProgress(user.uid)||blankData());
-  }
+  if(remote&&scoped){
+   chosen=(Number(scoped.localUpdatedAt)||0)>(Number(remote.localUpdatedAt)||0)?scoped:normalizeData(remote);
+  }else if(remote)chosen=normalizeData(remote);
+  else chosen=scoped||(legacyDeviceProgress(user.uid)||blankData());
   data=normalizeData(chosen);
   localStorage.setItem(STORAGE,JSON.stringify(data));
   if(!remote)await MathAuth.saveProgress(data);
