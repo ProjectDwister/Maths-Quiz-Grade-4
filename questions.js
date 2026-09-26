@@ -97,7 +97,7 @@ function generateCore(t,d){
     }
     if(mode===3){
       const upper=[0,20,30,40,50,50][d],n=r(1,upper),a=roman(n);
-      const candidates=[Math.max(1,n-1),Math.min(50,n+1),Math.max(1,n-5),Math.min(50,n+5)].map(roman);
+      const candidates=[n-1,n+1,n-2,n+2,n-5,n+5,n-10,n+10].filter(x=>x>=1&&x<=50&&x!==n).map(roman);
       return mcq('Which Roman numeral represents '+n+'?',a,candidates,'Build the numeral using I, V, X and L.','numbers',a+' represents '+n+'.','roman');
     }
     if(mode===4){
@@ -209,7 +209,7 @@ function generateCore(t,d){
       return input(num+'/'+base+' = ?/'+newDen+'. Find the missing numerator.',ans,'Multiply numerator and denominator by the same number.','fractions',base+' × '+k+' = '+newDen+', so '+num+' × '+k+' = '+ans+'.','equivalent');
     }
     if(mode===4){
-      const den=p([5,6,8,10,12]),a=r(1,den-1),b=r(1,den-1);if(a===b)b=b===den-1?b-1:b+1;const ans=a>b?a+'/'+den:b+'/'+den;
+      const den=p([5,6,8,10,12]),a=r(1,den-1);let b=r(1,den-1);if(a===b)b=b===den-1?b-1:b+1;const ans=a>b?a+'/'+den:b+'/'+den;
       return mcq('Which fraction is greater?',ans,[a>b?b+'/'+den:a+'/'+den,'They are equal','Cannot tell'],'With equal denominators, compare numerators.','fractions',ans+' has the larger numerator.','compare-like');
     }
     if(mode===5){
