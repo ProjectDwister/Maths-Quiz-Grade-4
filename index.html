@@ -14,7 +14,7 @@ h1{margin:0;font-size:clamp(1.5rem,3vw,2.2rem)}.sub,.muted{color:var(--muted)}.p
 .card{background:#fffffff2;border:1px solid var(--line);border-radius:23px;padding:22px;box-shadow:0 12px 30px #27324d18}.grid{display:grid;grid-template-columns:1.5fr .85fr;gap:18px}
 .hero{background:linear-gradient(140deg,#fff 35%,#efedff)}.hero h2{font-size:clamp(1.8rem,4vw,2.8rem);margin:.5rem 0}.topics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:18px}
 .topic{border:2px solid transparent;border-radius:17px;padding:12px 8px;background:#f7f6ff;min-height:86px;font-weight:800;cursor:pointer}.topic.active{border-color:var(--p);background:#ece9ff}.topic span{display:block;font-size:25px;margin-bottom:4px}
-.actions,.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.btn{border:0;border-radius:13px;padding:12px 17px;font-weight:800;cursor:pointer}.primary{background:var(--p);color:#fff}.secondary{background:#fff;border:1px solid var(--line)}.orange{background:var(--o);color:#fff}
+.actions,.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.session-length{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:15px}.length-picker{display:flex;gap:7px}.length-btn{border:1px solid var(--line);background:#f7f6ff;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer}.length-btn.active{background:var(--p);border-color:var(--p);color:#fff}.btn{border:0;border-radius:13px;padding:12px 17px;font-weight:800;cursor:pointer}.primary{background:var(--p);color:#fff}.secondary{background:#fff;border:1px solid var(--line)}.orange{background:var(--o);color:#fff}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f7f9fc;border-radius:15px;padding:12px;text-align:center}.stat b{display:block;font-size:1.25rem}.side{display:grid;gap:18px}
 .game,.report{display:none}.game.active,.report.active{display:block}.head{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.score{display:flex;gap:7px;flex-wrap:wrap}
 .progress{height:11px;border-radius:999px;background:#e9ebf0;overflow:hidden;margin:14px 0}.progress div{height:100%;background:linear-gradient(90deg,var(--p),#9388ff);transition:.2s}
@@ -33,7 +33,7 @@ footer{text-align:center;color:var(--muted);font-size:.78rem;margin:18px 0}
 
 <section id="home">
 <div class="grid">
-<div class="card hero"><div class="pill" style="display:inline-block">🎯 10-question adventure</div><h2>Become a Math Masti Master!</h2><p class="muted">Pick a topic or try a mixed quest. Questions adapt automatically: correct answers make the next one harder, while mistakes make it easier.</p><div class="topics" id="topics"></div><div class="actions"><button class="btn primary" id="start">Start Quest ▶</button><button class="btn orange" id="mixed">🎲 Mixed Practice</button></div></div>
+<div class="card hero"><div class="pill" style="display:inline-block">🎯 Adaptive 10 / 20 / 30-question quests</div><h2>Become a Math Masti Master!</h2><p class="muted">Pick a topic or try a mixed quest. Questions adapt automatically: correct answers make the next one harder, while mistakes make it easier. Each topic now includes many different question formats.</p><div class="topics" id="topics"></div><div class="session-length"><b>Questions per quest:</b><div class="length-picker"><button class="length-btn" data-length="10">10</button><button class="length-btn active" data-length="20">20</button><button class="length-btn" data-length="30">30</button></div></div><div class="actions"><button class="btn primary" id="start">Start Quest ▶</button><button class="btn orange" id="mixed">🎲 Mixed Practice</button></div></div>
 <div class="side">
 <div class="card"><h3>Your progress</h3><div class="stats"><div class="stat"><b id="games">0</b><small>Games</small></div><div class="stat"><b id="stars">0</b><small>Stars</small></div><div class="stat"><b id="streakBest">0</b><small>Best streak</small></div></div></div>
 <div class="card"><h3>Achievements</h3><div id="badges" class="badges"></div></div>
@@ -50,7 +50,7 @@ footer{text-align:center;color:var(--muted);font-size:.78rem;margin:18px 0}
 <section class="report" id="report"><div class="card"><div class="head"><h2>Progress Report</h2><button class="btn secondary" id="reportHome">← Home</button></div><p class="muted">Accuracy is based on questions completed on this browser.</p><div class="reportgrid" id="reportGrid"></div><div class="actions"><button class="btn secondary" id="reset">Reset Progress</button></div></div></section>
 <footer>Practice game for Grade 4 mathematics. School sequencing may vary across CISCE-affiliated schools.</footer>
 </div>
-<script src="questions.js?v=3"></script>
+<script src="questions.js?v=4"></script>
 <script>
 const T=[
 ['numbers','Numbers & Place Value','🔢'],['operations','Add & Subtract','➕'],['multdiv','Multiply & Divide','✖️'],['factors','Factors & Multiples','🧩'],
@@ -62,13 +62,13 @@ const key='mathMastiGrade4v2';
 const D=['','Warm-up','Easy','Medium','Hard','Challenge'];
 let data=JSON.parse(localStorage.getItem(key)||'null')||{games:0,stars:0,best:0,bestStreak:0,topic:{}};
 ids.forEach(x=>data.topic[x]??={right:0,total:0});
-let S={topic:'mixed',n:0,total:10,score:0,streak:0,bestRun:0,difficulty:2,start:0,timer:null,current:null,answered:false};
+let S={topic:'mixed',n:0,total:20,score:0,correct:0,streak:0,bestRun:0,difficulty:2,start:0,timer:null,current:null,answered:false};
 const {generate:gen,isCorrect:same}=MathQuestionEngine;
 function save(){localStorage.setItem(key,JSON.stringify(data));stats()}
 function topics(){let g=$('#topics');g.innerHTML='';T.forEach(([id,name,ico])=>{let b=document.createElement('button');b.className='topic'+(S.topic===id?' active':'');b.innerHTML=`<span>${ico}</span>${name}`;b.onclick=()=>{S.topic=id;topics()};g.appendChild(b)})}
 function stats(){$('#games').textContent=data.games;$('#stars').textContent=data.stars;$('#streakBest').textContent=data.bestStreak;$('#best').textContent='🏆 Best: '+data.best;let a=[];if(data.games)a.push('🎒 First Quest');if(data.bestStreak>=5)a.push('🔥 5 Streak');if(data.best>=900)a.push('🏆 Math Ace');if(data.stars>=50)a.push('⭐ Star Collector');$('#badges').innerHTML=a.length?a.map(x=>`<span class="badge">${x}</span>`).join(''):'<span class="muted">Play to unlock badges!</span>'}
 function show(x){$('#home').style.display=x==='home'?'block':'none';$('#game').classList.toggle('active',x==='game');$('#report').classList.toggle('active',x==='report')}
-function start(topic=S.topic){S.topic=topic;S.n=0;S.score=0;S.streak=0;S.bestRun=0;S.difficulty=2;S.start=Date.now();clearInterval(S.timer);S.timer=setInterval(()=>$('#timer').textContent='⏱ '+Math.floor((Date.now()-S.start)/1000)+'s',1000);show('game');next()}
+function start(topic=S.topic){S.topic=topic;S.n=0;S.score=0;S.correct=0;S.streak=0;S.bestRun=0;S.difficulty=2;S.start=Date.now();clearInterval(S.timer);S.timer=setInterval(()=>$('#timer').textContent='⏱ '+Math.floor((Date.now()-S.start)/1000)+'s',1000);show('game');next()}
 function next(){if(S.n>=S.total)return finish();S.answered=false;S.current=gen(S.topic,S.difficulty);S.n++;$('#prog').style.width=((S.n-1)/S.total*100)+'%';$('#count').textContent=S.n+' / '+S.total;let meta=T.find(x=>x[0]===S.current.t);$('#topicLabel').textContent=meta[2]+' '+meta[1];$('#q').textContent=S.current.q;$('#hint').textContent=S.current.h;$('#hint').classList.remove('show');$('#feedback').textContent='';$('#next').style.display='none';$('#hintBtn').style.display='inline-block';render();pills()}
 function render(){let a=$('#answers');a.innerHTML='';let q=S.current;if(q.kind==='mcq'){let d=document.createElement('div');d.className='answers';q.o.forEach(x=>{let b=document.createElement('button');b.className='answer';b.textContent=x;b.onclick=()=>submit(x,b);d.appendChild(b)});a.appendChild(d)}else{let i=document.createElement('input');i.className='input';i.placeholder='Type your answer';i.onkeydown=e=>{if(e.key==='Enter')submit(i.value,i)};let w=document.createElement('div');w.style.textAlign='center';w.appendChild(i);let br=document.createElement('br');w.appendChild(br);let b=document.createElement('button');b.className='btn primary';b.style.marginTop='10px';b.textContent='Check Answer';b.onclick=()=>submit(i.value,i);w.appendChild(b);a.appendChild(w);setTimeout(()=>i.focus(),50)}}
 function submit(v,el){
@@ -77,7 +77,7 @@ function submit(v,el){
  let q=S.current,ok=same(v,q.a),oldLevel=S.difficulty;
  data.topic[q.t].total++;
  if(ok){
-  data.topic[q.t].right++;S.streak++;S.bestRun=Math.max(S.bestRun,S.streak);
+  data.topic[q.t].right++;S.correct++;S.streak++;S.bestRun=Math.max(S.bestRun,S.streak);
   let bonus=Math.min(50,S.streak*10);S.score+=100+bonus;
   $('#feedback').textContent='✅ Correct! +'+(100+bonus);
   el.classList?.add('correct');
@@ -96,8 +96,18 @@ function submit(v,el){
  save();
 }
 function pills(){$('#score').textContent='⭐ '+S.score;$('#streak').textContent='🔥 '+S.streak;$('#difficulty').textContent='⚡ Level '+S.difficulty+' • '+D[S.difficulty]}
-function finish(){clearInterval(S.timer);data.games++;data.stars+=Math.round(S.score/100);data.best=Math.max(data.best,S.score);data.bestStreak=Math.max(data.bestStreak,S.bestRun);save();let sec=Math.floor((Date.now()-S.start)/1000);$('#q').innerHTML=(S.score>=1050?'🌟 Outstanding!':S.score>=800?'🎉 Great work!':'💪 Nice practice!')+`<br><small>Score: ${S.score} • Time: ${sec}s • Best streak: ${S.bestRun}</small>`;$('#answers').innerHTML='<div style="text-align:center"><button class="btn primary" id="again">Play Again</button> <button class="btn secondary" id="done">Home</button></div>';$('#again').onclick=()=>start(S.topic);$('#done').onclick=()=>show('home');$('#feedback').textContent='';$('#hintBtn').style.display='none';$('#next').style.display='none';$('#topicLabel').textContent='Quest complete';$('#count').textContent='10 / 10';$('#prog').style.width='100%'}
+function finish(){
+ clearInterval(S.timer);
+ data.games++;data.stars+=Math.round(S.score/100);data.best=Math.max(data.best,S.score);data.bestStreak=Math.max(data.bestStreak,S.bestRun);save();
+ let sec=Math.floor((Date.now()-S.start)/1000),accuracy=Math.round(S.correct/S.total*100);
+ let praise=accuracy>=90?'🌟 Outstanding!':accuracy>=75?'🎉 Great work!':accuracy>=60?'👍 Good practice!':'💪 Keep practising!';
+ $('#q').innerHTML=praise+'<br><small>'+S.correct+'/'+S.total+' correct • '+accuracy+'% accuracy • Score: '+S.score+' • Time: '+sec+'s • Best streak: '+S.bestRun+'</small>';
+ $('#answers').innerHTML='<div style="text-align:center"><button class="btn primary" id="again">Play Again</button> <button class="btn secondary" id="done">Home</button></div>';
+ $('#again').onclick=()=>start(S.topic);$('#done').onclick=()=>show('home');
+ $('#feedback').textContent='';$('#hintBtn').style.display='none';$('#next').style.display='none';$('#topicLabel').textContent='Quest complete';$('#count').textContent=S.total+' / '+S.total;$('#prog').style.width='100%';
+}
 function report(){let g=$('#reportGrid');g.innerHTML='';ids.forEach(id=>{let t=T.find(x=>x[0]===id),x=data.topic[id],pct=x.total?Math.round(x.right/x.total*100):0,d=document.createElement('div');d.className='ritem';d.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px"><b>${t[2]} ${t[1]}</b><span>${x.right}/${x.total} • ${pct}%</span></div><div class="bar"><div style="width:${pct}%"></div></div><div class="muted" style="margin-top:6px;font-size:.82rem">${x.total<5?'Do at least 5 questions for a useful trend.':pct>=80?'Strong area.':pct>=60?'Developing well — practise a little more.':'Focus area — revisit this topic.'}</div>`;g.appendChild(d)});show('report')}
+document.querySelectorAll('.length-btn').forEach(b=>b.onclick=()=>{S.total=Number(b.dataset.length);document.querySelectorAll('.length-btn').forEach(x=>x.classList.toggle('active',x===b))});
 $('#start').onclick=()=>start();$('#mixed').onclick=()=>{S.topic='mixed';topics();start('mixed')};$('#homeBtn').onclick=()=>{clearInterval(S.timer);show('home')};$('#hintBtn').onclick=()=>$('#hint').classList.add('show');$('#next').onclick=next;$('#reportBtn').onclick=report;$('#reportHome').onclick=()=>show('home');$('#reset').onclick=()=>{if(confirm('Reset all saved progress?')){localStorage.removeItem(key);location.reload()}};
 topics();stats();show('home');
 </script>
