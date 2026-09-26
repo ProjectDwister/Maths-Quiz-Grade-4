@@ -255,7 +255,7 @@ function renderPractice(){
  $$('[data-practice]').forEach(b=>b.onclick=()=>startSession('practice',b.dataset.practice));
 }
 function showView(name){
- $('.view').forEach(v=>v.classList.toggle('active',v.id===name+'View'));
+ $$('.view').forEach(v=>v.classList.toggle('active',v.id===name+'View'));
  window.scrollTo({top:0,behavior:'smooth'});
 }
 function setAuthMessage(message,type=''){
@@ -282,7 +282,7 @@ function setAuthMode(mode){
  const signIn=mode!=='signup';
  $('#signInPanel').hidden=!signIn;
  $('#signUpPanel').hidden=signIn;
- $('.auth-tab').forEach(b=>b.classList.toggle('active',b.dataset.authMode===mode));
+ $$('.auth-tab').forEach(b=>b.classList.toggle('active',b.dataset.authMode===mode));
  setAuthMessage('');
 }
 function renderAccountControls(){
@@ -401,14 +401,14 @@ function startAuthBridge(){
  MathAuth.observe(user=>user?activateUser(user):showSignedOut());
 }
 function bindAuthUi(){
- $('.auth-tab').forEach(b=>b.onclick=()=>setAuthMode(b.dataset.authMode));
+ $$('.auth-tab').forEach(b=>b.onclick=()=>setAuthMode(b.dataset.authMode));
  $('#signInBtn').onclick=handleEmailSignIn;
  $('#signInPassword').onkeydown=e=>{if(e.key==='Enter')handleEmailSignIn()};
  $('#signUpBtn').onclick=handleSignUp;
  $('#signUpPassword').onkeydown=e=>{if(e.key==='Enter')handleSignUp()};
  $('#googleSignInBtn').onclick=handleGoogleSignIn;
  $('#forgotPasswordBtn').onclick=handleResetPassword;
- $('.guest-mode-btn').forEach(b=>b.onclick=startGuestMode);
+ $$('.guest-mode-btn').forEach(b=>b.onclick=startGuestMode);
  $('#signOutBtn').onclick=async()=>{
   if(guestMode)return showSignedOut();
   setSyncStatus('☁️ Signing out…','syncing');
