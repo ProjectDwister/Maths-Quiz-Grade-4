@@ -3,6 +3,109 @@
 
 const TOPICS=['numbers','operations','multdiv','factors','fractions','decimals','measurement','time','money','geometry','patterns','word'];
 const VARIANT_COUNTS={numbers:7,operations:5,multdiv:6,factors:6,fractions:7,decimals:7,measurement:8,time:6,money:7,geometry:10,patterns:7,word:8};
+const CONCEPT_META={
+  'place-digit':['Place-value digits','Check the named place carefully; counting from the wrong side is a common slip.'],
+  'place-value':['Place value','A digit and its place value are different: 6 in the hundreds place means 600.'],
+  'roman':['Roman numerals','Build Roman numerals in groups; remember IV=4, IX=9 and XL=40.'],
+  'compare':['Comparing numbers','Compare from the highest place first, not from the last digit.'],
+  'successor-predecessor':['Successor & predecessor','Successor means +1; predecessor means −1.'],
+  'rounding':['Rounding','Look one place to the right: 5 or more rounds up, 4 or less stays down.'],
+  'expanded-form':['Expanded form','Expanded form shows each non-zero digit multiplied by its place value.'],
+
+  'direct':['Addition & subtraction','Line up matching place values and watch the operation sign.'],
+  'missing-addend':['Missing addend','Use the inverse operation: total − known addend = missing addend.'],
+  'missing-subtrahend':['Missing subtrahend','If start − ? = result, then start − result gives the missing amount.'],
+  'three-addends':['Three-number addition','Add in manageable pairs and keep place values aligned.'],
+  'estimation':['Estimation','Round first, then calculate; do not calculate exactly before rounding.'],
+
+  'multiply':['Multiplication','Break a larger factor into tens and ones if the table fact is not immediate.'],
+  'exact-division':['Exact division','Use the related multiplication fact to check the quotient.'],
+  'missing-factor':['Missing factor','Use division: product ÷ known factor = missing factor.'],
+  'missing-dividend':['Missing dividend','Dividend = divisor × quotient.'],
+  'remainder':['Division with remainder','The remainder must be smaller than the divisor.'],
+  'grouping':['Equal grouping','Equal groups use division, not multiplication.'],
+
+  'factor-choice':['Factors','A factor divides exactly; a multiple is produced by multiplication.'],
+  'multiple':['Multiples','The nth multiple is the number multiplied by n.'],
+  'prime-composite':['Prime & composite','Prime numbers have exactly two factors: 1 and the number itself.'],
+  'divisibility':['Divisibility','Use a divisibility rule or confirm that division leaves no remainder.'],
+  'hcf':['HCF','HCF is the greatest factor shared by both numbers.'],
+  'lcm':['LCM','LCM is the smallest positive multiple shared by both numbers.'],
+
+  'add-like':['Adding like fractions','With the same denominator, add numerators only; keep the denominator.'],
+  'subtract-like':['Subtracting like fractions','With the same denominator, subtract numerators only.'],
+  'equivalent':['Equivalent fractions','Multiply or divide numerator and denominator by the same number.'],
+  'compare-like':['Comparing fractions','When denominators match, the larger numerator gives the larger fraction.'],
+  'fraction-of-quantity':['Fraction of a quantity','Divide by the denominator first, then multiply by the numerator.'],
+  'add-unlike':['Adding unlike fractions','Convert to a common denominator before adding.'],
+  'mixed-to-improper':['Mixed to improper fraction','Whole × denominator + numerator gives the new numerator.'],
+
+  'decimal-place':['Decimal place value','Tenths are first after the decimal; hundredths are second.'],
+  'compare-decimals':['Comparing decimals','Compare whole parts, then tenths, then hundredths.'],
+  'decimal-add':['Adding decimals','Align decimal points before adding.'],
+  'decimal-subtract':['Subtracting decimals','Align decimal points and regroup if needed.'],
+  'fraction-to-decimal':['Fraction to decimal','Tenths have one decimal place; hundredths have two.'],
+  'decimal-to-fraction':['Decimal to fraction','Write the decimal over 10 or 100, then simplify.'],
+  'rupees-paise-decimal':['Rupees & paise','100 paise = ₹1, so paise occupy hundredths of a rupee.'],
+
+  'm-cm':['Metres to centimetres','Multiply metres by 100.'],
+  'cm-m':['Centimetres to metres','Divide centimetres by 100.'],
+  'kg-g':['Kilograms to grams','Multiply kilograms by 1000.'],
+  'l-ml':['Litres to millilitres','Multiply litres by 1000.'],
+  'perimeter':['Perimeter','Perimeter measures the boundary: add all side lengths.'],
+  'area':['Area','Area measures surface covered: rectangle area = length × width.'],
+  'compound-length':['Compound length','Convert everything to the same unit before adding.'],
+  'fencing':['Perimeter in context','Fencing goes around the boundary, so use perimeter, not area.'],
+
+  'end-time':['Finding end time','Add the elapsed time to the start time.'],
+  'start-time':['Finding start time','Work backwards from the end time by the duration.'],
+  'duration':['Elapsed time','Count the time between the start and end, not the clock readings themselves.'],
+  'hours-minutes':['Hours to minutes','Multiply hours by 60.'],
+  'compound-time':['Hours & minutes','Convert hours to minutes before adding the extra minutes.'],
+  'clock-language':['Reading clock language','Quarter past = :15, half past = :30, quarter to = :45 of the previous hour.'],
+
+  'remaining':['Money remaining','Remaining money = starting amount − amount spent.'],
+  'total':['Adding money','Add all prices to find the total.'],
+  'change':['Finding change','Change = amount paid − total bill.'],
+  'quantity-price':['Quantity × price','Total cost = number of items × price per item.'],
+  'rupees-paise':['Rupees to paise','₹1 equals 100 paise.'],
+  'compare-money':['Comparing money','Compare the full amounts, not just one digit.'],
+  'multi-step-money':['Multi-step money','Find item totals first, add them, then calculate change.'],
+
+  'triangle-sides':['Triangle properties','A triangle always has 3 sides.'],
+  'rectangle-vertices':['Vertices','Vertices are corners; a rectangle has 4.'],
+  'circle':['Curved shapes','A circle has a curved boundary and no straight sides.'],
+  'right-angles':['Right angles','A rectangle has four 90° angles.'],
+  'parallel':['Parallel sides','Parallel lines stay the same distance apart and never meet.'],
+  'symmetry':['Line symmetry','A symmetry line splits a shape into matching mirror halves.'],
+  'acute':['Acute angles','Acute angles are less than 90°.'],
+  'obtuse':['Obtuse angles','Obtuse angles are greater than 90° and less than 180°.'],
+  'trapezium':['Quadrilaterals','A trapezium has exactly one pair of parallel sides in this Grade 4 convention.'],
+  'ray':['Lines & rays','A ray has one endpoint and continues forever in one direction.'],
+
+  'add-pattern':['Growing patterns','Find the constant amount added each time.'],
+  'subtract-pattern':['Decreasing patterns','Find the constant amount subtracted each time.'],
+  'multiply-pattern':['Multiplicative patterns','Look for multiplication, not just addition.'],
+  'alternating-pattern':['Alternating patterns','Two different rules repeat in turn.'],
+  'data-maximum':['Reading data','Compare all values before choosing the greatest.'],
+  'data-total':['Adding data','Add every category exactly once.'],
+  'data-difference':['Data difference','Difference means greatest value − smallest value.'],
+
+  'addition-story':['Addition word problems','Words such as altogether or now often indicate addition.'],
+  'subtraction-story':['Subtraction word problems','Words such as left or remain often indicate subtraction.'],
+  'multiplication-story':['Multiplication word problems','Equal groups with the same amount use multiplication.'],
+  'division-story':['Division word problems','Equal sharing or equal grouping uses division.'],
+  'multiply-add':['Two-step: multiply then add','Solve the equal groups first, then add the extra amount.'],
+  'multiply-subtract':['Two-step: multiply then subtract','Find the grouped total first, then subtract what was removed.'],
+  'capacity-story':['Capacity word problem','Find total capacity first, then adjust for empty places.'],
+  'array-plus-extra':['Arrays plus extras','Find the array total with multiplication, then add extras.']
+};
+
+const TOPIC_LABELS={
+  numbers:'Numbers & Place Value',operations:'Addition & Subtraction',multdiv:'Multiplication & Division',
+  factors:'Factors & Multiples',fractions:'Fractions',decimals:'Decimals',measurement:'Measurement',
+  time:'Time',money:'Money',geometry:'Geometry',patterns:'Patterns & Data',word:'Word Problems'
+};
 const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const p=a=>a[r(0,a.length-1)];
 const shuffle=a=>[...a].sort(()=>Math.random()-.5);
@@ -61,7 +164,53 @@ function validateQuestion(q){
   }else if(q.kind!=='input')return {ok:false,reason:'unknown question kind'};
   return {ok:true};
 }
-function finish(q){const c=validateQuestion(q);if(!c.ok)throw new Error(c.reason+' | '+JSON.stringify(q));return q}
+function buildVisual(q){
+  const fractions=(q.q.match(/\d+\/\d+/g)||[]).slice(0,2);
+  if(q.t==='fractions'&&fractions.length){
+    return {type:'fraction',fractions};
+  }
+  if(q.t==='time'){
+    const tm=(q.q.match(/\b\d{1,2}:\d{2}\b/)||[])[0] || (q.variant==='clock-language'?q.a:null);
+    if(tm)return {type:'clock',time:tm};
+  }
+  if(q.t==='measurement'&&['perimeter','area','fencing'].includes(q.variant)){
+    const nums=(q.q.match(/\d+/g)||[]).map(Number);
+    if(nums.length>=2)return {type:'rectangle',length:nums[0],width:nums[1],mode:q.variant};
+  }
+  if(q.t==='patterns'&&q.variant.startsWith('data-')){
+    const pairs=[...q.q.matchAll(/(Red|Blue|Green|Yellow):\s*(\d+)/g)].map(m=>({label:m[1],value:Number(m[2])}));
+    if(pairs.length)return {type:'bars',items:pairs};
+  }
+  if(q.t==='geometry')return {type:'geometry',shape:q.variant};
+  if(q.t==='money'){
+    const amounts=[...q.q.matchAll(/₹\s*(\d+(?:\.\d+)?)/g)].map(m=>Number(m[1])).slice(0,4);
+    if(amounts.length)return {type:'money',amounts};
+  }
+  if(q.t==='numbers'&&['place-digit','place-value','expanded-form'].includes(q.variant)){
+    const n=(q.q.match(/[\d,]{3,}/)||[])[0];
+    if(n)return {type:'place-value',number:n};
+  }
+  if(q.t==='multdiv'&&['grouping','multiply'].includes(q.variant)){
+    const nums=(q.q.match(/\d+/g)||[]).map(Number);
+    if(nums.length>=2&&nums[0]<=120)return {type:'groups',values:nums.slice(0,2)};
+  }
+  return null;
+}
+function decorate(q){
+  const meta=CONCEPT_META[q.variant]||[q.variant.replace(/-/g,' '),'Re-read the question and check the operation or rule used.'];
+  q.concept=q.t+'::'+q.variant;
+  q.conceptLabel=meta[0];
+  q.topicLabel=TOPIC_LABELS[q.t]||q.t;
+  q.misconception=meta[1];
+  q.visual=buildVisual(q);
+  return q;
+}
+function finish(q){
+  q=decorate(q);
+  const c=validateQuestion(q);
+  if(!c.ok)throw new Error(c.reason+' | '+JSON.stringify(q));
+  return q;
+}
 function roman(n){
   const vals=[[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
   let out=''; for(const [v,s] of vals)while(n>=v){out+=s;n-=v} return out;
@@ -76,10 +225,24 @@ function numericDistractors(ans,step=1){
   return [...new Set(vals)].slice(0,4);
 }
 
-function generate(topic,difficulty){
+function generate(topic,difficulty,preferredVariant){
   const t=topic==='mixed'?p(TOPICS):topic;
   if(!TOPICS.includes(t))throw new Error('Unknown topic: '+topic);
-  return finish(generateCore(t,clamp(Number(difficulty)||2,1,5)));
+  const d=clamp(Number(difficulty)||2,1,5);
+  if(preferredVariant)return generateForVariant(t,d,preferredVariant);
+  return finish(generateCore(t,d));
+}
+function generateForVariant(topic,difficulty,variant){
+  if(!TOPICS.includes(topic))throw new Error('Unknown topic: '+topic);
+  const wanted=String(variant),base=clamp(Number(difficulty)||2,1,5);
+  const levels=[base,3,4,5,2,1].filter((x,i,a)=>a.indexOf(x)===i);
+  for(const level of levels){
+    for(let i=0;i<260;i++){
+      const q=finish(generateCore(topic,level));
+      if(q.variant===wanted)return q;
+    }
+  }
+  throw new Error('Could not generate variant '+wanted+' for '+topic);
 }
 
 function generateCore(t,d){
@@ -353,7 +516,7 @@ function generateCore(t,d){
   throw new Error('Unhandled topic: '+t);
 }
 
-const api={TOPICS,VARIANT_COUNTS,generate,isCorrect,validateQuestion,reduceFraction,gcd,lcm};
+const api={TOPICS,TOPIC_LABELS,VARIANT_COUNTS,CONCEPT_META,generate,generateForVariant,isCorrect,validateQuestion,reduceFraction,gcd,lcm};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 root.MathQuestionEngine=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
