@@ -16,7 +16,8 @@ new Function(app);
  'function adaptiveLevel','recent=c.recent.slice(-5)','function recalcMastery',
  "S.mode==='revision'",'generateForVariant','function renderVisual','function renderDashboard',
  'function renderJourney','function renderShop','function updateDaily','misconception',
- 'ownedAccessories','chapterUnlocked'
+ 'ownedAccessories','chapterUnlocked','history:[]','function renderSessionResults',
+ 'function openReviewQuestion','function renderReviewedAnswer','reviewFilter'
 ].forEach(token=>assert.ok(app.includes(token),'Missing app capability: '+token));
 
 assert.ok(css.includes('.fraction-bar'),'Fraction visual styling missing');
@@ -24,5 +25,7 @@ assert.ok(css.includes('.chart'),'Data visual styling missing');
 assert.ok(css.includes('.journey'),'Journey styling missing');
 assert.ok(css.includes('.concept-table'),'Parent dashboard styling missing');
 assert.ok(css.includes('.shop-grid'),'Shop styling missing');
+assert.ok(css.includes('.review-list'),'End-of-test review styling missing');
+assert.ok(css.includes('.review-nav'),'Question review navigation styling missing');
 
 console.log('App static checks passed.');
