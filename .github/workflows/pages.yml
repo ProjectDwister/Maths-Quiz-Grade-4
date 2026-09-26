@@ -31,6 +31,8 @@ jobs:
         run: node tests/question-engine.test.js
       - name: Validate mastery game interface
         run: node tests/app-static.test.js
+      - name: Validate authentication and user sync
+        run: node tests/auth-static.test.js
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
