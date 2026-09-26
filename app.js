@@ -219,7 +219,7 @@ function showView(name){
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-let S={mode:'mixed',topic:null,fixedVariant:null,total:20,n:0,score:0,correct:0,streak:0,bestRun:0,current:null,difficulty:2,start:0,qStart:0,hintUsed:false,timer:null,sessionXp:0,sessionCoins:0,startStars:0,answered:false};
+let S={mode:'mixed',topic:null,fixedVariant:null,total:20,n:0,score:0,correct:0,streak:0,bestRun:0,current:null,difficulty:2,start:0,qStart:0,hintUsed:false,timer:null,sessionXp:0,sessionCoins:0,startStars:0,answered:false,history:[],reviewFilter:'all',finished:false};
 function chooseTopic(){
  if(S.mode!=='mixed')return S.topic;
  const choices=TOPICS.map(t=>{
@@ -262,7 +262,7 @@ function adaptiveLevel(topic,variant){
 }
 function startSession(mode,topic=null,variant=null){
  clearInterval(S.timer);
- S={mode,topic,fixedVariant:variant,total:data.settings.length,n:0,score:0,correct:0,streak:0,bestRun:0,current:null,difficulty:2,start:now(),qStart:0,hintUsed:false,timer:null,sessionXp:0,sessionCoins:0,startStars:topic?starsFor(topic):0,answered:false};
+ S={mode,topic,fixedVariant:variant,total:data.settings.length,n:0,score:0,correct:0,streak:0,bestRun:0,current:null,difficulty:2,start:now(),qStart:0,hintUsed:false,timer:null,sessionXp:0,sessionCoins:0,startStars:topic?starsFor(topic):0,answered:false,history:[],reviewFilter:'all',finished:false};
  if(mode==='revision')S.total=Math.min(data.settings.length,Math.max(10,mistakeEntries().length*2));
  showView('game');
  $('#gameMode').textContent=mode==='revision'?'Practice My Mistakes':mode==='journey'?'Journey Chapter':mode==='mixed'?'Mixed Mastery':variant?'Recommended Practice':'Free Practice';
@@ -315,6 +315,16 @@ function submitAnswer(value,el){
  if(S.answered||!String(value).trim())return;
  S.answered=true;
  const q=S.current,correct=E.isCorrect(value,q.a),responseMs=now()-S.qStart,key=q.concept,c=conceptData(q.t,q.variant);
+ S.history.push({
+  number:S.n,
+  question:JSON.parse(JSON.stringify(q)),
+  userAnswer:String(value),
+  correctAnswer:String(q.a),
+  correct,
+  hintUsed:S.hintUsed,
+  responseMs,
+  difficulty:S.difficulty
+ });
  c.attempts++;if(correct)c.correct++;if(S.hintUsed)c.hints++;c.totalMs+=responseMs;
  const event={ts:now(),topic:q.t,variant:q.variant,correct,hintUsed:S.hintUsed,responseMs,difficulty:S.difficulty};
  c.recent.push(event);c.recent=c.recent.slice(-12);recalcMastery(c);data.events.push({...event,concept:key});
@@ -354,21 +364,109 @@ function updateGameHud(){
 }
 function finishSession(){
  clearInterval(S.timer);
- data.games++;
- const accuracy=pct(S.correct,S.n||1),bonusCoins=Math.floor(accuracy/20);
- data.coins+=bonusCoins;S.sessionCoins+=bonusCoins;
- let chapterBonus='';
- if(S.mode==='journey'&&S.topic){
-  const gained=starsFor(S.topic)-S.startStars;
-  if(gained>0){const reward=gained*25;data.coins+=reward;S.sessionCoins+=reward;chapterBonus=' • Chapter star bonus +'+reward+' coins';}
+ if(!S.finished){
+  S.finished=true;
+  data.games++;
+  const accuracy=pct(S.correct,S.n||1),bonusCoins=Math.floor(accuracy/20);
+  data.coins+=bonusCoins;S.sessionCoins+=bonusCoins;
+  let chapterBonus='';
+  if(S.mode==='journey'&&S.topic){
+   const gained=starsFor(S.topic)-S.startStars;
+   if(gained>0){const reward=gained*25;data.coins+=reward;S.sessionCoins+=reward;chapterBonus=' • Chapter star bonus +'+reward+' coins';}
+  }
+  S.chapterBonus=chapterBonus;
+  data.lastSession={
+   completedAt:now(),
+   mode:S.mode,
+   topic:S.topic,
+   total:S.n,
+   correct:S.correct,
+   history:S.history.slice(-30)
+  };
+  save();
  }
- save();
- $('#topicLabel').textContent='Quest complete';$('#questionCount').textContent=S.n+' / '+S.total;$('#gameProgress').style.width='100%';
+ renderSessionResults();
+}
+function renderSessionResults(filter=S.reviewFilter||'all'){
+ S.reviewFilter=filter;
+ const accuracy=pct(S.correct,S.n||1),wrong=S.n-S.correct;
+ $('#topicLabel').textContent='Quest complete';
+ $('#questionCount').textContent=S.n+' / '+S.total;
+ $('#gameProgress').style.width='100%';
  $('#visual').innerHTML='';
- $('#questionText').innerHTML='<div class="end-summary"><h2>'+(accuracy>=90?'🌟 Masterful!':accuracy>=75?'🎉 Great work!':accuracy>=60?'👍 Good practice!':'💪 Keep building!')+'</h2><div>'+S.correct+'/'+S.n+' correct • '+accuracy+'% accuracy • Best streak '+S.bestRun+'</div><div class="reward-burst">+'+S.sessionXp+' XP • +'+S.sessionCoins+' coins'+chapterBonus+'</div></div>';
- $('#answerArea').innerHTML='<div class="center"><button class="btn primary" id="playAgain">Play Again</button> <button class="btn secondary" id="homeAfter">Home</button></div>';
- $('#feedback').innerHTML='';$('#hintBtn').style.display='none';$('#nextBtn').style.display='none';
- $('#playAgain').onclick=()=>startSession(S.mode,S.topic,S.fixedVariant);$('#homeAfter').onclick=renderHome;
+ $('#questionText').innerHTML='<div class="end-summary"><h2>'+(accuracy>=90?'🌟 Masterful!':accuracy>=75?'🎉 Great work!':accuracy>=60?'👍 Good practice!':'💪 Keep building!')+'</h2><div>'+S.correct+'/'+S.n+' correct • '+accuracy+'% accuracy • Best streak '+S.bestRun+'</div><div class="reward-burst">+'+S.sessionXp+' XP • +'+S.sessionCoins+' coins'+(S.chapterBonus||'')+'</div></div>';
+ const filtered=S.history.filter(item=>filter==='all'||(filter==='correct'?item.correct:!item.correct));
+ const rows=filtered.map(item=>{
+  const q=item.question,t=TOPIC_MAP[q.t]||{icon:'🧠',name:q.t};
+  return '<div class="review-row '+(item.correct?'review-correct':'review-wrong')+'">'+
+   '<div class="review-status">'+(item.correct?'✅':'❌')+'</div>'+
+   '<div class="review-main"><div class="review-meta">Q'+item.number+' • '+t.icon+' '+esc(q.conceptLabel||t.name)+' • '+DIFF[item.difficulty]+'</div>'+
+   '<div class="review-question">'+esc(q.q)+'</div>'+
+   '<div class="review-answers"><span><b>Your answer:</b> '+esc(item.userAnswer)+'</span><span><b>Correct:</b> '+esc(item.correctAnswer)+'</span></div></div>'+
+   '<button class="btn secondary review-open" data-review-index="'+S.history.indexOf(item)+'">Review question</button></div>';
+ }).join('');
+ $('#answerArea').innerHTML=
+  '<div class="review-summary">'+
+   '<div class="review-stat"><b>'+S.correct+'</b><span>Correct</span></div>'+
+   '<div class="review-stat"><b>'+wrong+'</b><span>Incorrect</span></div>'+
+   '<div class="review-stat"><b>'+accuracy+'%</b><span>Accuracy</span></div>'+
+  '</div>'+
+  '<div class="review-toolbar"><b>Review all '+S.n+' questions</b><div class="review-filters">'+
+   '<button class="review-filter '+(filter==='all'?'active':'')+'" data-review-filter="all">All ('+S.n+')</button>'+
+   '<button class="review-filter '+(filter==='wrong'?'active':'')+'" data-review-filter="wrong">Incorrect ('+wrong+')</button>'+
+   '<button class="review-filter '+(filter==='correct'?'active':'')+'" data-review-filter="correct">Correct ('+S.correct+')</button>'+
+  '</div></div>'+
+  '<div class="review-list">'+(rows||'<div class="review-empty">No questions in this filter.</div>')+'</div>'+
+  '<div class="center review-bottom"><button class="btn primary" id="playAgain">Play Again</button> <button class="btn secondary" id="homeAfter">Home</button></div>';
+ $('#feedback').innerHTML='';
+ $('#hintBtn').style.display='none';
+ $('#nextBtn').style.display='none';
+ $$('.review-filter').forEach(b=>b.onclick=()=>renderSessionResults(b.dataset.reviewFilter));
+ $$('.review-open').forEach(b=>b.onclick=()=>openReviewQuestion(Number(b.dataset.reviewIndex)));
+ $('#playAgain').onclick=()=>startSession(S.mode,S.topic,S.fixedVariant);
+ $('#homeAfter').onclick=renderHome;
+}
+function openReviewQuestion(index){
+ const item=S.history[index];if(!item)return renderSessionResults();
+ const q=item.question,t=TOPIC_MAP[q.t]||{icon:'🧠',name:q.t};
+ $('#topicLabel').textContent='Review • '+t.icon+' '+t.name+' • '+(q.conceptLabel||'');
+ $('#questionCount').textContent='Question '+item.number+' of '+S.n;
+ $('#masteryChip').textContent=item.correct?'Answered correctly':'Needs review';
+ $('#difficultyChip').textContent='⚡ '+DIFF[item.difficulty];
+ $('#visual').innerHTML=renderVisual(q);
+ $('#questionText').textContent=q.q;
+ $('#hintBox').classList.remove('show');
+ renderReviewedAnswer(item);
+ let html='<div class="review-verdict '+(item.correct?'good':'bad')+'">'+(item.correct?'✅ Answered correctly':'❌ Answered incorrectly')+'</div>';
+ if(!item.correct)html+='<div class="explain mistake-note"><b>What may have happened:</b> '+esc(q.misconception)+'</div>';
+ html+='<div class="explain solution"><b>Worked solution:</b> '+esc(q.solution)+'</div>';
+ if(item.hintUsed)html+='<div class="adapt-note">💡 A hint was used on this question.</div>';
+ html+='<div class="review-nav">'+
+  '<button class="btn secondary" id="reviewPrev" '+(index===0?'disabled':'')+'>← Previous</button>'+
+  '<button class="btn primary" id="reviewBack">Back to Results</button>'+
+  '<button class="btn secondary" id="reviewNext" '+(index===S.history.length-1?'disabled':'')+'>Next →</button></div>';
+ $('#feedback').innerHTML=html;
+ $('#hintBtn').style.display='none';$('#nextBtn').style.display='none';
+ const prev=$('#reviewPrev'),next=$('#reviewNext');
+ if(prev)prev.onclick=()=>openReviewQuestion(index-1);
+ if(next)next.onclick=()=>openReviewQuestion(index+1);
+ $('#reviewBack').onclick=()=>renderSessionResults(S.reviewFilter);
+}
+function renderReviewedAnswer(item){
+ const q=item.question,box=$('#answerArea');box.innerHTML='';
+ if(q.kind==='mcq'){
+  const wrap=document.createElement('div');wrap.className='answers review-answers-grid';
+  q.o.forEach(opt=>{
+   const b=document.createElement('button');b.className='answer';b.disabled=true;b.textContent=opt;
+   if(E.isCorrect(opt,q.a))b.classList.add('correct');
+   if(E.isCorrect(opt,item.userAnswer)&&!item.correct)b.classList.add('wrong');
+   wrap.appendChild(b);
+  });
+  box.appendChild(wrap);
+ }else{
+  box.innerHTML='<div class="review-inputs"><div class="review-answer-card '+(item.correct?'good':'bad')+'"><small>Your answer</small><b>'+esc(item.userAnswer)+'</b></div>'+
+   '<div class="review-answer-card good"><small>Correct answer</small><b>'+esc(item.correctAnswer)+'</b></div></div>';
+ }
 }
 function renderVisual(q){
  const v=q.visual;if(!v)return '';
