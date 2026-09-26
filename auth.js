@@ -133,10 +133,6 @@
       if (!user) return;
       await storeMod.setDoc(userRef(user.uid), {
         progress,
-        profile: {
-          displayName: user.displayName || '',
-          email: user.email || ''
-        },
         updatedAt: storeMod.serverTimestamp()
       }, { merge: true });
     }
