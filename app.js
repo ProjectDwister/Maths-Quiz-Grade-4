@@ -22,6 +22,7 @@ const LEGACY_CLAIM='mathMastiLegacyClaimedBy';
 let STORAGE=STORAGE_BASE;
 let currentUser=null;
 let currentProfile=null;
+let guestMode=false;
 let cloudSyncReady=false;
 let cloudSaveTimer=null;
 const DIFF=['','Warm-up','Easy','Medium','Hard','Challenge'];
@@ -115,7 +116,7 @@ function setSyncStatus(text,state=''){
  el.dataset.state=state;
 }
 function scheduleCloudSave(){
- if(!cloudSyncReady||!currentUser||!window.MathAuth||!MathAuth.configured)return;
+ if(guestMode||!cloudSyncReady||!currentUser||!window.MathAuth||!MathAuth.configured)return;
  clearTimeout(cloudSaveTimer);
  setSyncStatus('☁️ Syncing…','syncing');
  const snapshot=JSON.parse(JSON.stringify(data));
@@ -289,14 +290,21 @@ function renderAccountControls(){
  $('#appAccount').hidden=!loggedIn;
  $('#guestAccount').hidden=loggedIn;
  if(!loggedIn)return;
+ if(guestMode){
+  $('#userChip').textContent='👤 Guest';
+  $('#userChip').title='Progress saved only on this device';
+  $('#signOutBtn').textContent='Exit guest';
+  return;
+ }
  const name=(currentUser.displayName||currentUser.email||'Account').trim();
  const role=currentProfile&&currentProfile.role?currentProfile.role:'child';
  $('#userChip').textContent=(role==='parent'?'👨‍👩‍👧 ':'🧒 ')+name;
  $('#userChip').title=(currentUser.email||'')+' • '+role;
+ $('#signOutBtn').textContent='Sign out';
 }
 function showSignedOut(){
  clearInterval(S&&S.timer);
- currentUser=null;currentProfile=null;cloudSyncReady=false;clearTimeout(cloudSaveTimer);
+ currentUser=null;currentProfile=null;guestMode=false;cloudSyncReady=false;clearTimeout(cloudSaveTimer);
  STORAGE=STORAGE_BASE;data=blankData();
  renderAccountControls();
  setSyncStatus('☁️ Not signed in','');
@@ -311,9 +319,9 @@ function showSignedOut(){
 }
 async function activateUser(user){
  if(!user)return showSignedOut();
- if(currentUser&&currentUser.uid===user.uid&&cloudSyncReady)return;
+ if(currentUser&&currentUser.uid===user.uid&&cloudSyncReady&&!guestMode)return;
  showView('loading');
- currentUser=user;currentProfile=null;cloudSyncReady=false;
+ guestMode=false;currentUser=user;currentProfile=null;cloudSyncReady=false;
  STORAGE=STORAGE_BASE+':'+user.uid;
  renderAccountControls();
  setSyncStatus('☁️ Loading…','syncing');
@@ -341,6 +349,17 @@ async function activateUser(user){
   renderAccountControls();setSyncStatus('⚠️ Offline cache','error');
   ensureDaily();updateHud();updateLengthButtons();renderHome();
  }
+}
+function startGuestMode(){
+ clearTimeout(cloudSaveTimer);
+ guestMode=true;cloudSyncReady=false;
+ currentUser={uid:'guest',displayName:'Guest',email:''};
+ currentProfile={role:'child',displayName:'Guest',email:''};
+ STORAGE=STORAGE_BASE;
+ data=loadData(STORAGE);
+ renderAccountControls();
+ setSyncStatus('💾 This device only','');
+ ensureDaily();updateHud();updateLengthButtons();renderHome();
 }
 async function handleEmailSignIn(){
  const email=$('#signInEmail').value.trim(),password=$('#signInPassword').value;
@@ -389,7 +408,12 @@ function bindAuthUi(){
  $('#signUpPassword').onkeydown=e=>{if(e.key==='Enter')handleSignUp()};
  $('#googleSignInBtn').onclick=handleGoogleSignIn;
  $('#forgotPasswordBtn').onclick=handleResetPassword;
- $('#signOutBtn').onclick=async()=>{setSyncStatus('☁️ Signing out…','syncing');try{await MathAuth.signOut()}catch(err){alert(friendlyAuthError(err))}};
+ $('.guest-mode-btn').forEach(b=>b.onclick=startGuestMode);
+ $('#signOutBtn').onclick=async()=>{
+  if(guestMode)return showSignedOut();
+  setSyncStatus('☁️ Signing out…','syncing');
+  try{await MathAuth.signOut()}catch(err){alert(friendlyAuthError(err))}
+ };
 }
 
 let S={mode:'mixed',topic:null,fixedVariant:null,total:20,n:0,score:0,correct:0,streak:0,bestRun:0,current:null,difficulty:2,start:0,qStart:0,hintUsed:false,timer:null,sessionXp:0,sessionCoins:0,startStars:0,answered:false,history:[],reviewFilter:'all',finished:false};
