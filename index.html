@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Math Masti Quest - Grade 4</title>
 <style>
 :root{--ink:#23304b;--muted:#6b7280;--p:#6658e8;--o:#ff9f43;--ok:#159b69;--bad:#d94f6a;--line:#e8e5ef}
@@ -19,7 +20,7 @@ h1{margin:0;font-size:clamp(1.5rem,3vw,2.2rem)}.sub,.muted{color:var(--muted)}.p
 .progress{height:11px;border-radius:999px;background:#e9ebf0;overflow:hidden;margin:14px 0}.progress div{height:100%;background:linear-gradient(90deg,var(--p),#9388ff);transition:.2s}
 .qbox{border:2px solid #ebe8ff;border-radius:21px;padding:22px;min-height:280px;background:linear-gradient(#fff,#fbfbff)}.qmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:.86rem}
 .question{text-align:center;font-weight:900;font-size:clamp(1.35rem,3.2vw,2.4rem);line-height:1.25;margin:32px 0 22px}.answers{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}.answer{border:2px solid #e5e4ec;border-radius:15px;padding:14px;background:#fff;font-weight:850;cursor:pointer}.answer.correct{border-color:var(--ok);background:#eafaf3}.answer.wrong{border-color:var(--bad);background:#fff0f3}
-.answer:disabled{cursor:default}.input{display:block;width:min(320px,100%);margin:auto;border:2px solid #ddd9eb;border-radius:15px;padding:13px;text-align:center;font-size:1.2rem;font-weight:800}.feedback{text-align:center;min-height:44px;margin-top:12px;font-weight:800}.hint{display:none;background:#fff8df;border:1px dashed #d7ad31;border-radius:13px;padding:10px;margin-top:10px}.hint.show{display:block}
+.answer:disabled{cursor:default}.input{display:block;width:min(320px,100%);margin:auto;border:2px solid #ddd9eb;border-radius:15px;padding:13px;text-align:center;font-size:1.2rem;font-weight:800}.feedback{text-align:center;min-height:44px;margin-top:12px;font-weight:800}.solution{margin:10px auto 0;max-width:720px;padding:10px 12px;border-radius:12px;background:#f2f8ff;border:1px solid #cfe1f7;font-weight:650;line-height:1.45}.levelshift{margin-top:7px;color:var(--muted);font-size:.9rem}.hint{display:none;background:#fff8df;border:1px dashed #d7ad31;border-radius:13px;padding:10px;margin-top:10px}.hint.show{display:block}
 .reportgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.ritem{background:#f7f9fc;border-radius:15px;padding:13px}.bar{height:8px;background:#e4e7ec;border-radius:999px;overflow:hidden;margin-top:7px}.bar div{height:100%;background:var(--p)}
 .badges{display:flex;gap:7px;flex-wrap:wrap}.badge{background:#fff5cc;border:1px solid #edd16b;border-radius:999px;padding:7px 9px;font-size:.82rem;font-weight:800}
 footer{text-align:center;color:var(--muted);font-size:.78rem;margin:18px 0}
@@ -49,6 +50,7 @@ footer{text-align:center;color:var(--muted);font-size:.78rem;margin:18px 0}
 <section class="report" id="report"><div class="card"><div class="head"><h2>Progress Report</h2><button class="btn secondary" id="reportHome">← Home</button></div><p class="muted">Accuracy is based on questions completed on this browser.</p><div class="reportgrid" id="reportGrid"></div><div class="actions"><button class="btn secondary" id="reset">Reset Progress</button></div></div></section>
 <footer>Practice game for Grade 4 mathematics. School sequencing may vary across CISCE-affiliated schools.</footer>
 </div>
+<script src="questions.js?v=3"></script>
 <script>
 const T=[
 ['numbers','Numbers & Place Value','🔢'],['operations','Add & Subtract','➕'],['multdiv','Multiply & Divide','✖️'],['factors','Factors & Multiples','🧩'],
@@ -61,90 +63,14 @@ const D=['','Warm-up','Easy','Medium','Hard','Challenge'];
 let data=JSON.parse(localStorage.getItem(key)||'null')||{games:0,stars:0,best:0,bestStreak:0,topic:{}};
 ids.forEach(x=>data.topic[x]??={right:0,total:0});
 let S={topic:'mixed',n:0,total:10,score:0,streak:0,bestRun:0,difficulty:2,start:0,timer:null,current:null,answered:false};
+const {generate:gen,isCorrect:same}=MathQuestionEngine;
 function save(){localStorage.setItem(key,JSON.stringify(data));stats()}
-function mcq(q,a,o,h,t){return{kind:'mcq',q,a,o:shuffle(o),h,t}}
-function input(q,a,h,t){return{kind:'input',q,a:String(a),h,t}}
-function gen(t,d=S.difficulty){
- if(t==='mixed')t=p(ids);
- if(t==='numbers'){
-  let max=[0,999,9999,99999,999999,999999][d],min=[0,100,1000,10000,100000,100000][d],m=r(1,4);
-  if(m===1){let n=r(min,max),places=d===1?[[100,'hundreds'],[10,'tens'],[1,'ones']]:d===2?[[1000,'thousands'],[100,'hundreds'],[10,'tens'],[1,'ones']]:d===3?[[10000,'ten-thousands'],[1000,'thousands'],[100,'hundreds'],[10,'tens'],[1,'ones']]:[[100000,'lakhs'],[10000,'ten-thousands'],[1000,'thousands'],[100,'hundreds'],[10,'tens'],[1,'ones']],pl=p(places);return input('What is the digit in the '+pl[1]+' place of '+n+'?',Math.floor(n/pl[0])%10,'Read place values from right to left.',t)}
-  if(m===2){let n=r(min,max),places=d===1?[10,100]:d===2?[10,100,1000]:d===3?[10,100,1000,10000]:[10,100,1000,10000,100000],pv=p(places);return input('What is the value of the digit '+(Math.floor(n/pv)%10)+' in '+n+'?',(Math.floor(n/pv)%10)*pv,'Digit value = digit × place value.',t)}
-  if(m===3){let rq=[null,{n:9,a:'IX',o:['IX','XI','VI','IV']},{n:14,a:'XIV',o:['XIV','XVI','IX','XX']},{n:29,a:'XXIX',o:['XXIX','XIX','XXXI','XXIV']},{n:40,a:'XL',o:['XL','LX','XXXX','IV']},{n:49,a:'XLIX',o:['XLIX','IL','LXI','XXXXIX']}][d];return mcq('Which Roman numeral means '+rq.n+'?',rq.a,rq.o,'Build the numeral from tens and ones; remember subtraction forms such as IV, IX and XL.',t)}
-  let a=r(min,max),b=r(min,max);return mcq('Which number is greater: '+a+' or '+b+'?',String(Math.max(a,b)),[String(a),String(b),'They are equal','Cannot tell'],'Compare the highest place first.',t)
- }
- if(t==='operations'){
-  let ranges=[null,[100,999,10,300],[1000,4999,100,1500],[1000,9999,500,4000],[10000,50000,1000,9000],[10000,99999,5000,30000]],z=ranges[d],a=r(z[0],z[1]),b=r(z[2],z[3]),add=Math.random()>.5;if(!add&&b>a){let x=a;a=b;b=x}return input(a+' '+(add?'+':'−')+' '+b+' = ?',add?a+b:a-b,add?'Add matching place values carefully.':'Subtract from right to left and regroup when needed.',t)
- }
- if(t==='multdiv'){
-  if(Math.random()>.5){let ar=[null,[2,12],[12,50],[20,99],[100,299],[100,499]][d],br=[null,[2,9],[2,9],[2,12],[2,9],[10,19]][d],a=r(ar[0],ar[1]),b=r(br[0],br[1]);return input(a+' × '+b+' = ?',a*b,'Break the larger number into easier parts, then add the partial products.',t)}
-  let dm=[0,5,9,12,15,20][d],qm=[0,12,20,40,60,80][d],b=r(2,dm),q=r(3,qm);return input((b*q)+' ÷ '+b+' = ?',q,'Think: divisor × what number = dividend?',t)
- }
- if(t==='factors'){
-  const gcd=(x,y)=>y?gcd(y,x%y):x,lcm=(x,y)=>x*y/gcd(x,y);
-  if(d===1){let n=p([12,18,20,24,30,36]),pool=[2,3,4,5,6,7,8,9,10,12],fs=pool.filter(x=>n%x===0),ans=p(fs),wrong=pool.filter(x=>n%x!==0);return mcq('Which is a factor of '+n+'?',String(ans),[String(ans),...shuffle(wrong).slice(0,3).map(String)],'A factor divides exactly with no remainder.',t)}
-  if(d===2){let a=p([4,6,8,9,10,12]),k=r(4,10);return input('What is the '+k+'th multiple of '+a+'?',a*k,'Multiply the number by the position.',t)}
-  if(d===3){let a=p([12,18,24,30,36]),b=p([8,16,20,28,32]);return input('Find the HCF of '+a+' and '+b+'.',gcd(a,b),'List the factors common to both numbers and choose the greatest.',t)}
-  if(d===4){let a=p([4,6,8,9,10,12]),b=p([6,8,12,15,18]);return input('Find the LCM of '+a+' and '+b+'.',lcm(a,b),'List multiples until you find the first common one.',t)}
-  let a=p([18,24,30,36,42,48]),b=p([20,28,32,40,45,54]),useHcf=Math.random()>.5;return input('Find the '+(useHcf?'HCF':'LCM')+' of '+a+' and '+b+'.',useHcf?gcd(a,b):lcm(a,b),useHcf?'Find the greatest factor common to both.':'Find the smallest multiple common to both.',t)
- }
- if(t==='fractions'){
-  let den=p(d<=2?[4,5,6,8]:[6,8,10,12]);
-  if(d<=2){let a=r(1,Math.max(1,Math.floor(den/3))),b=r(1,Math.max(1,Math.floor(den/3)));return input(a+'/'+den+' + '+b+'/'+den+' = ? (write as numerator/denominator)',(a+b)+'/'+den,'Same denominator: add only the numerators.',t)}
-  if(d===3){let a=r(2,den-1),b=r(1,a-1);return input(a+'/'+den+' − '+b+'/'+den+' = ? (write as numerator/denominator)',(a-b)+'/'+den,'Same denominator: subtract only the numerators.',t)}
-  if(d===4){let base=p([2,3,4,5]),num=r(1,base-1),k=p([2,3,4]);return input(num+'/'+base+' = ?/'+(base*k)+'  What is the missing numerator?',num*k,'Multiply numerator and denominator by the same number.',t)}
-  let small=p([2,3,4,5]),big=small*p([2,3]),a=r(1,small-1),b=r(1,big-1),ans=a*(big/small)+b;return input(a+'/'+small+' + '+b+'/'+big+' = ?/'+big+'  What is the numerator?',ans,'Convert the first fraction to denominator '+big+', then add the numerators.',t)
- }
- if(t==='decimals'){
-  if(d===1){let a=r(10,50)/10,b=r(1,9)/10;return input(a.toFixed(1)+' + '+b.toFixed(1)+' = ?',(a+b).toFixed(1),'Line up the decimal points.',t)}
-  if(d===2){let a=r(20,90)/10,b=r(1,Math.floor(a*10)-1)/10;return input(a.toFixed(1)+' − '+b.toFixed(1)+' = ?',(a-b).toFixed(1),'Line up the decimal points before subtracting.',t)}
-  if(d===3){let a=r(100,900)/100,b=r(10,90)/100;return input(a.toFixed(2)+' + '+b.toFixed(2)+' = ?',(a+b).toFixed(2),'Hundredths must stay under hundredths.',t)}
-  if(d===4){let a=r(300,990)/100,b=r(10,Math.min(250,a*100-1))/100;return input(a.toFixed(2)+' − '+b.toFixed(2)+' = ?',(a-b).toFixed(2),'Regroup across the decimal point if needed.',t)}
-  let a=r(100,700)/100,b=r(10,200)/100,c=r(10,150)/100;return input(a.toFixed(2)+' + '+b.toFixed(2)+' + '+c.toFixed(2)+' = ?',(a+b+c).toFixed(2),'Add column by column and keep decimal points aligned.',t)
- }
- if(t==='measurement'){
-  if(d===1){let x=r(2,9);return input(x+' metres = ? centimetres',x*100,'1 metre = 100 centimetres.',t)}
-  if(d===2){let x=r(2,12);return input((x*100)+' centimetres = ? metres',x,'100 centimetres = 1 metre.',t)}
-  if(d===3){let l=r(4,15),w=r(2,10);return input('A rectangle is '+l+' cm long and '+w+' cm wide. What is its perimeter in cm?',2*(l+w),'Perimeter = 2 × (length + width).',t)}
-  if(d===4){let l=r(4,16),w=r(3,12);return input('Area of a '+l+' cm × '+w+' cm rectangle = ? cm²',l*w,'Area = length × width.',t)}
-  let l=r(8,20),w=r(4,12);return input('A rectangular garden is '+l+' m by '+w+' m. A rope goes around it twice. How many metres of rope are needed?',4*(l+w),'First find one perimeter, then double it.',t)
- }
- if(t==='time'){
-  let adds=[null,[15,30],[30,45,60],[45,60,90],[75,90,105],[105,120,135,150]][d],h=r(1,10),m=p([0,15,30,45]),add=p(adds),mins=h*60+m+add,hh=Math.floor(mins/60),mm=mins%60;while(hh>12)hh-=12;return input('A programme starts at '+h+':'+String(m).padStart(2,'0')+' and lasts '+add+' minutes. What time does it end?',hh+':'+String(mm).padStart(2,'0'),'Add the minutes; every 60 minutes makes 1 hour.',t)
- }
- if(t==='money'){
-  if(d<=2){let cap=d===1?200:500,a=r(50,cap),b=r(10,a);return input('You have ₹'+a+' and spend ₹'+b+'. How much remains?',a-b,'Money remaining = money you had − money spent.',t)}
-  if(d===3){let a=r(35,240),b=r(25,180);return input('A book costs ₹'+a+' and a pen set costs ₹'+b+'. What is the total cost?',a+b,'Add the prices.',t)}
-  if(d===4){let a=r(80,240),b=r(50,180),paid=500;return input('You buy items costing ₹'+a+' and ₹'+b+' and pay ₹'+paid+'. How much change should you get?',paid-a-b,'Add the costs first, then subtract from the amount paid.',t)}
-  let qty=r(3,6),price=r(35,85),paid=1000;return input('You buy '+qty+' notebooks at ₹'+price+' each and pay ₹'+paid+'. How much change should you get?',paid-qty*price,'Find the total cost using multiplication, then subtract it from ₹'+paid+'.',t)
- }
- if(t==='geometry'){
-  if(d===1)return p([mcq('A triangle has how many sides?','3',['2','3','4','5'],'Tri means three.',t),mcq('Which shape has no straight sides?','Circle',['Triangle','Square','Circle','Rectangle'],'Think about each boundary.',t)]);
-  if(d===2)return mcq('How many right angles does a rectangle have?','4',['1','2','3','4'],'Every corner of a rectangle is a right angle.',t);
-  if(d===3)return p([mcq('How many pairs of parallel sides does a rectangle have?','2',['0','1','2','4'],'Opposite sides of a rectangle are parallel.',t),mcq('How many lines of symmetry does a square have?','4',['1','2','3','4'],'Try folding a square through its middle and diagonals.',t)]);
-  if(d===4)return mcq('An angle greater than 90° but less than 180° is called…','Obtuse',['Acute','Right','Obtuse','Straight'],'Acute is below 90°, right is 90°, obtuse is between 90° and 180°.',t);
-  return mcq('Which quadrilateral has exactly one pair of parallel sides?','Trapezium',['Square','Rectangle','Rhombus','Trapezium'],'Count the pairs of parallel opposite sides.',t)
- }
- if(t==='patterns'){
-  if(d<=2){let a=r(3,30),step=r(d===1?2:5,d===1?5:12);return input('Complete the pattern: '+a+', '+(a+step)+', '+(a+2*step)+', '+(a+3*step)+', ?',a+4*step,'Find what is added each time.',t)}
-  if(d===3){let step=r(3,9),a=r(45,90);return input('Complete the pattern: '+a+', '+(a-step)+', '+(a-2*step)+', '+(a-3*step)+', ?',a-4*step,'Find what is subtracted each time.',t)}
-  if(d===4){let mult=p([2,3]),a=r(2,6);return input('Complete the pattern: '+a+', '+(a*mult)+', '+(a*mult*mult)+', '+(a*mult*mult*mult)+', ?',a*Math.pow(mult,4),'Each term is multiplied by the same number.',t)}
-  let a=r(10,25),up=r(5,10),down=r(2,4);return input('Complete the pattern: '+a+', '+(a+up)+', '+(a+up-down)+', '+(a+2*up-down)+', '+(a+2*up-2*down)+', ?',a+3*up-2*down,'The rule alternates: +'+up+', then −'+down+'.',t)
- }
- if(d===1){let a=r(200,600),b=r(50,180),add=Math.random()>.5;return input('A shop '+(add?'sold '+a+' pencils in the morning and '+b+' in the afternoon. How many altogether?':'had '+a+' pencils and sold '+b+'. How many remain?'),add?a+b:a-b,add?'Altogether means add.':'Remain means subtract.',t)}
- if(d===2){let boxes=r(3,8),each=r(6,15);return input(boxes+' boxes have '+each+' pencils each. How many pencils are there?',boxes*each,'Equal groups mean multiplication.',t)}
- if(d===3){let groups=r(3,9),each=r(6,15),total=groups*each;return input(total+' sweets are shared equally among '+groups+' children. How many sweets does each child get?',each,'Equal sharing means division.',t)}
- if(d===4){let kids=r(3,8),each=r(15,30),extra=r(5,25);return input(kids+' children collect '+each+' stickers each and a teacher adds '+extra+' more. How many stickers altogether?',kids*each+extra,'Multiply first, then add the extra stickers.',t)}
- let packs=r(4,9),each=r(12,25),given=r(15,40);return input('A class buys '+packs+' packs of '+each+' crayons and gives away '+given+'. How many crayons remain?',packs*each-given,'Multiply to find the total crayons, then subtract those given away.',t)
-}
 function topics(){let g=$('#topics');g.innerHTML='';T.forEach(([id,name,ico])=>{let b=document.createElement('button');b.className='topic'+(S.topic===id?' active':'');b.innerHTML=`<span>${ico}</span>${name}`;b.onclick=()=>{S.topic=id;topics()};g.appendChild(b)})}
 function stats(){$('#games').textContent=data.games;$('#stars').textContent=data.stars;$('#streakBest').textContent=data.bestStreak;$('#best').textContent='🏆 Best: '+data.best;let a=[];if(data.games)a.push('🎒 First Quest');if(data.bestStreak>=5)a.push('🔥 5 Streak');if(data.best>=900)a.push('🏆 Math Ace');if(data.stars>=50)a.push('⭐ Star Collector');$('#badges').innerHTML=a.length?a.map(x=>`<span class="badge">${x}</span>`).join(''):'<span class="muted">Play to unlock badges!</span>'}
 function show(x){$('#home').style.display=x==='home'?'block':'none';$('#game').classList.toggle('active',x==='game');$('#report').classList.toggle('active',x==='report')}
 function start(topic=S.topic){S.topic=topic;S.n=0;S.score=0;S.streak=0;S.bestRun=0;S.difficulty=2;S.start=Date.now();clearInterval(S.timer);S.timer=setInterval(()=>$('#timer').textContent='⏱ '+Math.floor((Date.now()-S.start)/1000)+'s',1000);show('game');next()}
 function next(){if(S.n>=S.total)return finish();S.answered=false;S.current=gen(S.topic,S.difficulty);S.n++;$('#prog').style.width=((S.n-1)/S.total*100)+'%';$('#count').textContent=S.n+' / '+S.total;let meta=T.find(x=>x[0]===S.current.t);$('#topicLabel').textContent=meta[2]+' '+meta[1];$('#q').textContent=S.current.q;$('#hint').textContent=S.current.h;$('#hint').classList.remove('show');$('#feedback').textContent='';$('#next').style.display='none';$('#hintBtn').style.display='inline-block';render();pills()}
 function render(){let a=$('#answers');a.innerHTML='';let q=S.current;if(q.kind==='mcq'){let d=document.createElement('div');d.className='answers';q.o.forEach(x=>{let b=document.createElement('button');b.className='answer';b.textContent=x;b.onclick=()=>submit(x,b);d.appendChild(b)});a.appendChild(d)}else{let i=document.createElement('input');i.className='input';i.placeholder='Type your answer';i.onkeydown=e=>{if(e.key==='Enter')submit(i.value,i)};let w=document.createElement('div');w.style.textAlign='center';w.appendChild(i);let br=document.createElement('br');w.appendChild(br);let b=document.createElement('button');b.className='btn primary';b.style.marginTop='10px';b.textContent='Check Answer';b.onclick=()=>submit(i.value,i);w.appendChild(b);a.appendChild(w);setTimeout(()=>i.focus(),50)}}
-const norm=x=>String(x).trim().toLowerCase().replace(/[₹, ]/g,'');
-function same(v,a){let nv=norm(v),na=norm(a);if(nv===na)return true;let num=/^[-+]?\\d*\\.?\\d+$/;return num.test(nv)&&num.test(na)&&Number(nv)===Number(na)}
 function submit(v,el){
  if(S.answered||!String(v).trim())return;
  S.answered=true;
@@ -164,7 +90,7 @@ function submit(v,el){
  pills();
  S.difficulty=ok?Math.min(5,S.difficulty+1):Math.max(1,S.difficulty-1);
  let shift=S.difficulty===oldLevel?(ok?' Challenge level maintained.':' Warm-up level maintained.'):(ok?' ⬆️ Next question moves up to Level '+S.difficulty+' ('+D[S.difficulty]+').':' ⬇️ Next question moves down to Level '+S.difficulty+' ('+D[S.difficulty]+').');
- $('#feedback').innerHTML+=shift;
+ $('#feedback').innerHTML+='<div class="levelshift">'+shift+'</div><div class="solution"><b>Solution:</b> '+q.solution+'</div>';
  document.querySelectorAll('.answer,.input').forEach(x=>x.disabled=true);
  $('#hintBtn').style.display='none';$('#next').style.display='inline-block';$('#prog').style.width=(S.n/S.total*100)+'%';
  save();
