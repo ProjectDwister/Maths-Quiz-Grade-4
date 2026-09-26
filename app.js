@@ -247,17 +247,18 @@ function chooseRevisionConcept(){
  return {key,...data.mistakes[key]};
 }
 function adaptiveLevel(topic,variant){
- const c=conceptData(topic,variant),m=c.mastery;
- let d=m<25?1:m<45?2:m<65?3:m<82?4:5;
- const recent=c.recent.slice(-5);
- if(recent.length>=3){
-  const accuracy=recent.filter(x=>x.correct).length/recent.length;
-  const hintRate=recent.filter(x=>x.hintUsed).length/recent.length;
-  const avg=recent.reduce((s,x)=>s+x.responseMs,0)/recent.length;
-  if(accuracy>=.8&&hintRate<=.33&&avg<=60000)d++;
-  else if(accuracy<=.4||hintRate>=.67)d--;
- }
- return clamp(d,1,5);
+ const c=conceptData(topic,variant),m=c.mastery,recent=c.recent.slice(-5);
+ if(recent.length<3)return 2;
+ let target=m<25?1:m<45?2:m<65?3:m<82?4:5;
+ const accuracy=recent.filter(x=>x.correct).length/recent.length;
+ const hintRate=recent.filter(x=>x.hintUsed).length/recent.length;
+ const avg=recent.reduce((s,x)=>s+x.responseMs,0)/recent.length;
+ const last=recent[recent.length-1].difficulty||2;
+ if(accuracy>=.8&&hintRate<=.33&&avg<=60000)target=Math.max(target,last+1);
+ if(accuracy<=.4||hintRate>=.67)target=Math.min(target,last-1);
+ if(target<last&&accuracy>.5&&hintRate<.67)target=last;
+ if(target>last&&accuracy<.75)target=last;
+ return clamp(target,1,5);
 }
 function startSession(mode,topic=null,variant=null){
  clearInterval(S.timer);
@@ -399,8 +400,7 @@ function renderVisual(q){
   return '<div class="place-grid">'+digits.map((d,i)=>'<div class="place-cell"><b>'+d+'</b><small>'+names[digits.length-1-i]+'</small></div>').join('')+'</div>';
  }
  if(v.type==='groups'){
-  const groups=Math.min(10,v.values[0]),per=Math.min(12,v.values[1]);
-  return '<div class="dot-groups">'+Array.from({length:groups},()=>'<div class="dot-group">'+Array.from({length:per},()=>'<i class="dot"></i>').join('')+'</div>').join('')+'</div>';
+  return '<div class="dot-groups">'+Array.from({length:v.groups},()=>'<div class="dot-group">'+Array.from({length:v.per},()=>'<i class="dot"></i>').join('')+'</div>').join('')+'</div>';
  }
  return '';
 }
