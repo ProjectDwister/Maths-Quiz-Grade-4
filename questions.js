@@ -204,9 +204,14 @@ function buildVisual(q){
     const n=(q.q.match(/[\d,]{3,}/)||[])[0];
     if(n)return {type:'place-value',number:n};
   }
-  if(q.t==='multdiv'&&['grouping','multiply'].includes(q.variant)){
+  if(q.t==='multdiv'&&q.variant==='grouping'){
     const nums=(q.q.match(/\d+/g)||[]).map(Number);
-    if(nums.length>=2&&nums[0]<=120)return {type:'groups',values:nums.slice(0,2)};
+    const groups=nums[1],per=Number(q.a);
+    if(groups&&per&&groups<=12&&per<=12)return {type:'groups',groups,per};
+  }
+  if(q.t==='multdiv'&&q.variant==='multiply'){
+    const nums=(q.q.match(/\d+/g)||[]).map(Number);
+    if(nums.length>=2&&nums[0]<=12&&nums[1]<=12)return {type:'groups',groups:nums[0],per:nums[1]};
   }
   return null;
 }
