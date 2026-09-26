@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      // A signed-in user can only read or write their own Math Masti account.
+      allow read, create, update, delete:
+        if request.auth != null && request.auth.uid == userId;
+
+      // Future-proof any per-user subcollections while keeping the same isolation.
+      match /{document=**} {
+        allow read, write:
+          if request.auth != null && request.auth.uid == userId;
+      }
+    }
+  }
+}
