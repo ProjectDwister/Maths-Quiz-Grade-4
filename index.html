@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Math Masti Quest — Grade 4</title>
-<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
 <div class="app-shell">
@@ -15,17 +15,99 @@
       <div><h1>Math Masti Quest</h1><div class="subtitle">Grade 4 • India • ICSE-friendly adaptive maths</div></div>
     </div>
     <div class="hud">
-      <button class="chip avatar-chip" id="homeNav" title="Home"><span id="hudAvatar">🧙</span></button>
-      <span class="chip" id="hudLevel">Lv 1</span>
-      <span class="chip" id="hudXp">✨ 0 XP</span>
-      <span class="chip" id="hudCoins">🪙 0</span>
-      <button class="btn secondary" id="dashboardNav">Parent Dashboard</button>
-      <button class="btn secondary" id="shopNav">Avatar Shop</button>
+      <div id="guestAccount"><span class="chip">🔐 Sign in to save progress</span></div>
+      <div id="appAccount" class="account-hud" hidden>
+        <button class="chip avatar-chip" id="homeNav" title="Home"><span id="hudAvatar">🧙</span></button>
+        <span class="chip" id="hudLevel">Lv 1</span>
+        <span class="chip" id="hudXp">✨ 0 XP</span>
+        <span class="chip" id="hudCoins">🪙 0</span>
+        <span class="chip sync-chip" id="syncChip">☁️ Loading…</span>
+        <span class="chip user-chip" id="userChip">Account</span>
+        <button class="btn secondary" id="dashboardNav">Parent Dashboard</button>
+        <button class="btn secondary" id="shopNav">Avatar Shop</button>
+        <button class="btn secondary" id="signOutBtn">Sign out</button>
+      </div>
     </div>
   </header>
 
   <main>
-    <section class="view active" id="homeView">
+    <section class="view active" id="loadingView">
+      <div class="panel auth-card loading-card">
+        <div class="auth-logo">➗</div>
+        <h2>Loading Math Masti Quest…</h2>
+        <p class="muted">Checking your account and progress.</p>
+      </div>
+    </section>
+
+    <section class="view" id="authView">
+      <div class="auth-layout">
+        <div class="panel auth-story">
+          <div class="auth-logo">➗</div>
+          <h2>Your maths journey, saved for you.</h2>
+          <p>Sign in so every child's or parent's mastery, mistakes, review history, XP, coins and dashboard follow the same account across supported devices.</p>
+          <div class="auth-benefits">
+            <div>☁️ <b>Cloud progress</b><span>Continue from another computer or phone.</span></div>
+            <div>👤 <b>Individual profiles</b><span>Each sign-in keeps its own performance record.</span></div>
+            <div>📈 <b>Long-term mastery</b><span>Parent dashboard data stays with the account.</span></div>
+          </div>
+        </div>
+        <div class="panel auth-card">
+          <div id="authSetupRequired" class="setup-required" hidden>
+            <h2>🔧 One-time Firebase setup needed</h2>
+            <p id="authSetupText">Authentication has been added to the app, but the Firebase project configuration still needs to be connected.</p>
+            <p class="muted">See <b>SETUP_FIREBASE.md</b> in the GitHub repository. Once the Firebase web configuration is pasted into <b>firebase-config.js</b>, this screen becomes the normal sign-in page.</p>
+          </div>
+
+          <div id="authForms">
+            <h2>Welcome to Math Masti Quest</h2>
+            <p class="muted">Use email/password or your Google account.</p>
+
+            <label class="field-label" for="googleRole">For a new account, I am signing in as</label>
+            <select class="auth-input" id="googleRole">
+              <option value="child">Child / Student</option>
+              <option value="parent">Parent / Adult</option>
+            </select>
+            <button class="google-btn" id="googleSignInBtn"><span class="google-g">G</span> Continue with Google</button>
+
+            <div class="auth-divider"><span>or use email</span></div>
+            <div class="auth-tabs">
+              <button class="auth-tab active" data-auth-mode="signin">Sign in</button>
+              <button class="auth-tab" data-auth-mode="signup">Create account</button>
+            </div>
+
+            <div id="signInPanel">
+              <label class="field-label" for="signInEmail">Email</label>
+              <input class="auth-input" id="signInEmail" type="email" autocomplete="email" placeholder="name@example.com">
+              <label class="field-label" for="signInPassword">Password</label>
+              <input class="auth-input" id="signInPassword" type="password" autocomplete="current-password" placeholder="Password">
+              <button class="btn primary auth-submit" id="signInBtn">Sign in</button>
+              <button class="link-btn" id="forgotPasswordBtn">Forgot password?</button>
+            </div>
+
+            <div id="signUpPanel" hidden>
+              <label class="field-label" for="signUpName">Name</label>
+              <input class="auth-input" id="signUpName" type="text" autocomplete="name" placeholder="Your name">
+              <label class="field-label" for="signUpRole">Account type</label>
+              <select class="auth-input" id="signUpRole">
+                <option value="child">Child / Student</option>
+                <option value="parent">Parent / Adult</option>
+              </select>
+              <label class="field-label" for="signUpEmail">Email</label>
+              <input class="auth-input" id="signUpEmail" type="email" autocomplete="email" placeholder="name@example.com">
+              <label class="field-label" for="signUpPassword">Password</label>
+              <input class="auth-input" id="signUpPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters">
+              <button class="btn primary auth-submit" id="signUpBtn">Create account</button>
+              <p class="auth-small">A verification email will be sent after signup.</p>
+            </div>
+
+            <div class="auth-message" id="authMessage"></div>
+            <p class="auth-small">Passwords are handled by Firebase Authentication and are never stored in this GitHub repository.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="homeView">
       <div class="hero">
         <div class="panel hero-main">
           <span class="chip">🧠 Adaptive mastery engine</span>
@@ -124,6 +206,8 @@
   <footer>Adaptive Grade 4 maths practice. School sequencing may vary across CISCE-affiliated schools.</footer>
 </div>
 <script src="questions.js?v=5"></script>
-<script src="app.js?v=6"></script>
+<script src="firebase-config.js?v=7"></script>
+<script src="auth.js?v=7"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
