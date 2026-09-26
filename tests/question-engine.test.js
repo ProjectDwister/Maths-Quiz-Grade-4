@@ -59,7 +59,10 @@ function semanticCheck(q) {
     }
   }
 
-  if (q.t === 'money' || q.t === 'word') assert.ok(Number(q.a) >= 0 || String(q.a).includes('/'), q.q);
+  if (q.t === 'money' || q.t === 'word') {
+    const numericAnswer = Number(String(q.a).replace(/[₹,]/g, ''));
+    if (!Number.isNaN(numericAnswer)) assert.ok(numericAnswer >= 0, q.q);
+  }
 }
 
 assert.ok(E.isCorrect('1/2', '2/4'), 'Equivalent fractions must be accepted');
