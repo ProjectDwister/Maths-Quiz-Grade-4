@@ -16,8 +16,14 @@ const TOPICS=[
  {id:'word',name:'Word Problems',icon:'🧠',city:'Goa'}
 ];
 const TOPIC_MAP=Object.fromEntries(TOPICS.map(x=>[x.id,x]));
-const STORAGE='mathMastiGrade4v3';
+const STORAGE_BASE='mathMastiGrade4v3';
 const LEGACY='mathMastiGrade4v2';
+const LEGACY_CLAIM='mathMastiLegacyClaimedBy';
+let STORAGE=STORAGE_BASE;
+let currentUser=null;
+let currentProfile=null;
+let cloudSyncReady=false;
+let cloudSaveTimer=null;
 const DIFF=['','Warm-up','Easy','Medium','Hard','Challenge'];
 const AVATARS=[
  {id:'wizard',icon:'🧙',name:'Math Wizard',cost:0},
@@ -66,20 +72,8 @@ function ensureConcepts(d){
   }
  }
 }
-function loadData(){
- let d;
- try{d=JSON.parse(localStorage.getItem(STORAGE)||'null')}catch(e){}
- if(!d){
-  d=blankData();
-  try{
-   const old=JSON.parse(localStorage.getItem(LEGACY)||'null');
-   if(old){
-    d.games=old.games||0;d.bestStreak=old.bestStreak||0;
-    d.xp=(old.stars||0)*8;d.coins=Math.floor((old.stars||0)/2);
-   }
-  }catch(e){}
- }
- d={...blankData(),...d,settings:{...blankData().settings,...(d.settings||{})}};
+function normalizeData(d){
+ d={...blankData(),...(d||{}),settings:{...blankData().settings,...((d&&d.settings)||{})}};
  d.ownedAvatars=[...new Set(['wizard',...(d.ownedAvatars||[])])];
  d.ownedAccessories=[...new Set(['none',...(d.ownedAccessories||[])])];
  d.events=Array.isArray(d.events)?d.events:[];
@@ -87,11 +81,55 @@ function loadData(){
  ensureConcepts(d);
  return d;
 }
-let data=loadData();
+function loadData(key=STORAGE){
+ let d;
+ try{d=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
+ return normalizeData(d||blankData());
+}
+function legacyDeviceProgress(uid){
+ const claimed=localStorage.getItem(LEGACY_CLAIM);
+ if(claimed&&claimed!==uid)return null;
+ try{
+  const current=JSON.parse(localStorage.getItem(STORAGE_BASE)||'null');
+  if(current){
+   localStorage.setItem(LEGACY_CLAIM,uid);
+   return normalizeData(current);
+  }
+ }catch(e){}
+ try{
+  const old=JSON.parse(localStorage.getItem(LEGACY)||'null');
+  if(old){
+   const d=blankData();
+   d.games=old.games||0;d.bestStreak=old.bestStreak||0;
+   d.xp=(old.stars||0)*8;d.coins=Math.floor((old.stars||0)/2);
+   localStorage.setItem(LEGACY_CLAIM,uid);
+   return normalizeData(d);
+  }
+ }catch(e){}
+ return null;
+}
+let data=blankData();
+function setSyncStatus(text,state=''){
+ const el=$('#syncChip');if(!el)return;
+ el.textContent=text;
+ el.dataset.state=state;
+}
+function scheduleCloudSave(){
+ if(!cloudSyncReady||!currentUser||!window.MathAuth||!MathAuth.configured)return;
+ clearTimeout(cloudSaveTimer);
+ setSyncStatus('☁️ Syncing…','syncing');
+ const snapshot=JSON.parse(JSON.stringify(data));
+ cloudSaveTimer=setTimeout(()=>{
+  MathAuth.saveProgress(snapshot)
+   .then(()=>setSyncStatus('☁️ Synced','synced'))
+   .catch(err=>{console.error('Cloud sync failed',err);setSyncStatus('⚠️ Sync error','error')});
+ },650);
+}
 function save(){
  data.events=data.events.slice(-1500);
  localStorage.setItem(STORAGE,JSON.stringify(data));
  updateHud();
+ scheduleCloudSave();
 }
 function conceptKey(topic,variant){return topic+'::'+variant}
 function conceptData(topic,variant){return data.concepts[conceptKey(topic,variant)]}
@@ -215,8 +253,141 @@ function renderPractice(){
  $$('[data-practice]').forEach(b=>b.onclick=()=>startSession('practice',b.dataset.practice));
 }
 function showView(name){
- $$('.view').forEach(v=>v.classList.toggle('active',v.id===name+'View'));
+ $('.view').forEach(v=>v.classList.toggle('active',v.id===name+'View'));
  window.scrollTo({top:0,behavior:'smooth'});
+}
+function setAuthMessage(message,type=''){
+ const el=$('#authMessage');if(!el)return;
+ el.textContent=message||'';el.className='auth-message '+type;
+}
+function friendlyAuthError(err){
+ const code=err&&err.code?err.code:'';
+ const map={
+  'auth/invalid-credential':'Email or password is incorrect.',
+  'auth/wrong-password':'Email or password is incorrect.',
+  'auth/user-not-found':'No account was found for that email.',
+  'auth/email-already-in-use':'An account already exists for this email.',
+  'auth/invalid-email':'Enter a valid email address.',
+  'auth/weak-password':'Choose a stronger password.',
+  'auth/too-many-requests':'Too many attempts. Try again a little later.',
+  'auth/network-request-failed':'Network problem. Check your internet connection.',
+  'auth/popup-closed-by-user':'Google sign-in was closed before it finished.',
+  'auth/unauthorized-domain':'This website domain has not yet been authorized in Firebase.'
+ };
+ return map[code]||(err&&err.message?err.message:'Authentication failed. Please try again.');
+}
+function setAuthMode(mode){
+ const signIn=mode!=='signup';
+ $('#signInPanel').hidden=!signIn;
+ $('#signUpPanel').hidden=signIn;
+ $('.auth-tab').forEach(b=>b.classList.toggle('active',b.dataset.authMode===mode));
+ setAuthMessage('');
+}
+function renderAccountControls(){
+ const loggedIn=!!currentUser;
+ $('#appAccount').hidden=!loggedIn;
+ $('#guestAccount').hidden=loggedIn;
+ if(!loggedIn)return;
+ const name=(currentUser.displayName||currentUser.email||'Account').trim();
+ const role=currentProfile&&currentProfile.role?currentProfile.role:'child';
+ $('#userChip').textContent=(role==='parent'?'👨‍👩‍👧 ':'🧒 ')+name;
+ $('#userChip').title=(currentUser.email||'')+' • '+role;
+}
+function showSignedOut(){
+ clearInterval(S&&S.timer);
+ currentUser=null;currentProfile=null;cloudSyncReady=false;clearTimeout(cloudSaveTimer);
+ STORAGE=STORAGE_BASE;data=blankData();
+ renderAccountControls();
+ setSyncStatus('☁️ Not signed in','');
+ if(window.MathAuth&&MathAuth.configured){
+  $('#authSetupRequired').hidden=true;$('#authForms').hidden=false;
+ }else{
+  $('#authSetupRequired').hidden=false;$('#authForms').hidden=true;
+  $('#authSetupText').textContent=(window.MathAuth&&MathAuth.error)||'Firebase setup is required before sign-in can be used.';
+ }
+ setAuthMode('signin');
+ showView('auth');
+}
+async function activateUser(user){
+ if(!user)return showSignedOut();
+ if(currentUser&&currentUser.uid===user.uid&&cloudSyncReady)return;
+ showView('loading');
+ currentUser=user;currentProfile=null;cloudSyncReady=false;
+ STORAGE=STORAGE_BASE+':'+user.uid;
+ renderAccountControls();
+ setSyncStatus('☁️ Loading…','syncing');
+ try{
+  const [remote,profile]=await Promise.all([MathAuth.loadProgress(),MathAuth.getProfile()]);
+  currentProfile=profile||{role:'child',displayName:user.displayName||'',email:user.email||''};
+  let chosen;
+  if(remote)chosen=normalizeData(remote);
+  else{
+   let scopedRaw=null;
+   try{scopedRaw=JSON.parse(localStorage.getItem(STORAGE)||'null')}catch(e){}
+   chosen=scopedRaw?normalizeData(scopedRaw):(legacyDeviceProgress(user.uid)||blankData());
+  }
+  data=normalizeData(chosen);
+  localStorage.setItem(STORAGE,JSON.stringify(data));
+  if(!remote)await MathAuth.saveProgress(data);
+  cloudSyncReady=true;
+  renderAccountControls();
+  setSyncStatus('☁️ Synced','synced');
+  ensureDaily();updateHud();updateLengthButtons();renderHome();
+ }catch(err){
+  console.error('Could not load user progress',err);
+  data=loadData(STORAGE);cloudSyncReady=true;
+  renderAccountControls();setSyncStatus('⚠️ Offline cache','error');
+  ensureDaily();updateHud();updateLengthButtons();renderHome();
+ }
+}
+async function handleEmailSignIn(){
+ const email=$('#signInEmail').value.trim(),password=$('#signInPassword').value;
+ if(!email||!password)return setAuthMessage('Enter both email and password.','error');
+ setAuthMessage('Signing in…','info');$('#signInBtn').disabled=true;
+ try{await MathAuth.signIn(email,password)}
+ catch(err){setAuthMessage(friendlyAuthError(err),'error')}
+ finally{$('#signInBtn').disabled=false}
+}
+async function handleSignUp(){
+ const name=$('#signUpName').value.trim(),email=$('#signUpEmail').value.trim(),password=$('#signUpPassword').value,role=$('#signUpRole').value;
+ if(!name||!email||!password)return setAuthMessage('Enter name, email and password.','error');
+ if(password.length<8)return setAuthMessage('Use at least 8 characters for the password.','error');
+ setAuthMessage('Creating account…','info');$('#signUpBtn').disabled=true;
+ try{
+  await MathAuth.signUp({name,email,password,role});
+  setAuthMessage('Account created. We also sent a verification email.','success');
+ }catch(err){setAuthMessage(friendlyAuthError(err),'error')}
+ finally{$('#signUpBtn').disabled=false}
+}
+async function handleGoogleSignIn(){
+ const role=$('#googleRole').value;
+ setAuthMessage('Opening Google sign-in…','info');$('#googleSignInBtn').disabled=true;
+ try{await MathAuth.signInWithGoogle(role)}
+ catch(err){setAuthMessage(friendlyAuthError(err),'error')}
+ finally{$('#googleSignInBtn').disabled=false}
+}
+async function handleResetPassword(){
+ const email=$('#signInEmail').value.trim();
+ if(!email)return setAuthMessage('Enter your email address first, then choose Forgot password.','error');
+ try{
+  await MathAuth.resetPassword(email);
+  setAuthMessage('Password reset email sent. Check your inbox.','success');
+ }catch(err){setAuthMessage(friendlyAuthError(err),'error')}
+}
+function startAuthBridge(){
+ if(!window.MathAuth)return;
+ if(!MathAuth.configured)return showSignedOut();
+ MathAuth.observe(user=>user?activateUser(user):showSignedOut());
+}
+function bindAuthUi(){
+ $('.auth-tab').forEach(b=>b.onclick=()=>setAuthMode(b.dataset.authMode));
+ $('#signInBtn').onclick=handleEmailSignIn;
+ $('#signInPassword').onkeydown=e=>{if(e.key==='Enter')handleEmailSignIn()};
+ $('#signUpBtn').onclick=handleSignUp;
+ $('#signUpPassword').onkeydown=e=>{if(e.key==='Enter')handleSignUp()};
+ $('#googleSignInBtn').onclick=handleGoogleSignIn;
+ $('#forgotPasswordBtn').onclick=handleResetPassword;
+ $('#signOutBtn').onclick=async()=>{setSyncStatus('☁️ Signing out…','syncing');try{await MathAuth.signOut()}catch(err){alert(friendlyAuthError(err))}};
 }
 
 let S={mode:'mixed',topic:null,fixedVariant:null,total:20,n:0,score:0,correct:0,streak:0,bestRun:0,current:null,difficulty:2,start:0,qStart:0,hintUsed:false,timer:null,sessionXp:0,sessionCoins:0,startStars:0,answered:false,history:[],reviewFilter:'all',finished:false};
@@ -589,10 +760,10 @@ function resetProgress(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
- ensureDaily();updateHud();updateLengthButtons();renderHome();
- $('#homeNav').onclick=renderHome;
- $('#dashboardNav').onclick=renderDashboard;
- $('#shopNav').onclick=renderShop;
+ bindAuthUi();
+ $('#homeNav').onclick=()=>currentUser&&renderHome();
+ $('#dashboardNav').onclick=()=>currentUser&&renderDashboard();
+ $('#shopNav').onclick=()=>currentUser&&renderShop();
  $('#mixedBtn').onclick=()=>startSession('mixed');
  $('#mistakeBtn').onclick=()=>startSession('revision');
  $('#dashboardBtn').onclick=renderDashboard;
@@ -603,4 +774,8 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('#hintBtn').onclick=()=>{S.hintUsed=true;$('#hintBox').classList.add('show')};
  $('#nextBtn').onclick=nextQuestion;
  $('#resetBtn').onclick=resetProgress;
+ renderAccountControls();
+ showView('loading');
+ if(window.MathAuth)startAuthBridge();
+ else window.addEventListener('mathauthready',startAuthBridge,{once:true});
 });
