@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Math Masti Quest - Grade 4</title>
+<style>
+:root{--ink:#23304b;--muted:#6b7280;--p:#6658e8;--o:#ff9f43;--ok:#159b69;--bad:#d94f6a;--line:#e8e5ef}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ink);background:linear-gradient(#fff8e9,#f4f7ff);min-height:100vh}
+button,input{font:inherit}.app{max-width:1080px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px}
+.brand{display:flex;gap:12px;align-items:center}.logo{width:52px;height:52px;border-radius:17px;background:linear-gradient(135deg,var(--p),#9489ff);display:grid;place-items:center;color:#fff;font-size:27px}
+h1{margin:0;font-size:clamp(1.5rem,3vw,2.2rem)}.sub,.muted{color:var(--muted)}.pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 12px;box-shadow:0 5px 15px #22304a10}
+.card{background:#fffffff2;border:1px solid var(--line);border-radius:23px;padding:22px;box-shadow:0 12px 30px #27324d18}.grid{display:grid;grid-template-columns:1.5fr .85fr;gap:18px}
+.hero{background:linear-gradient(140deg,#fff 35%,#efedff)}.hero h2{font-size:clamp(1.8rem,4vw,2.8rem);margin:.5rem 0}.topics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:18px}
+.topic{border:2px solid transparent;border-radius:17px;padding:12px 8px;background:#f7f6ff;min-height:86px;font-weight:800;cursor:pointer}.topic.active{border-color:var(--p);background:#ece9ff}.topic span{display:block;font-size:25px;margin-bottom:4px}
+.actions,.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.btn{border:0;border-radius:13px;padding:12px 17px;font-weight:800;cursor:pointer}.primary{background:var(--p);color:#fff}.secondary{background:#fff;border:1px solid var(--line)}.orange{background:var(--o);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f7f9fc;border-radius:15px;padding:12px;text-align:center}.stat b{display:block;font-size:1.25rem}.side{display:grid;gap:18px}
+.game,.report{display:none}.game.active,.report.active{display:block}.head{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.score{display:flex;gap:7px;flex-wrap:wrap}
+.progress{height:11px;border-radius:999px;background:#e9ebf0;overflow:hidden;margin:14px 0}.progress div{height:100%;background:linear-gradient(90deg,var(--p),#9388ff);transition:.2s}
+.qbox{border:2px solid #ebe8ff;border-radius:21px;padding:22px;min-height:280px;background:linear-gradient(#fff,#fbfbff)}.qmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:.86rem}
+.question{text-align:center;font-weight:900;font-size:clamp(1.35rem,3.2vw,2.4rem);line-height:1.25;margin:32px 0 22px}.answers{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}.answer{border:2px solid #e5e4ec;border-radius:15px;padding:14px;background:#fff;font-weight:850;cursor:pointer}.answer.correct{border-color:var(--ok);background:#eafaf3}.answer.wrong{border-color:var(--bad);background:#fff0f3}
+.answer:disabled{cursor:default}.input{display:block;width:min(320px,100%);margin:auto;border:2px solid #ddd9eb;border-radius:15px;padding:13px;text-align:center;font-size:1.2rem;font-weight:800}.feedback{text-align:center;min-height:44px;margin-top:12px;font-weight:800}.hint{display:none;background:#fff8df;border:1px dashed #d7ad31;border-radius:13px;padding:10px;margin-top:10px}.hint.show{display:block}
+.reportgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.ritem{background:#f7f9fc;border-radius:15px;padding:13px}.bar{height:8px;background:#e4e7ec;border-radius:999px;overflow:hidden;margin-top:7px}.bar div{height:100%;background:var(--p)}
+.badges{display:flex;gap:7px;flex-wrap:wrap}.badge{background:#fff5cc;border:1px solid #edd16b;border-radius:999px;padding:7px 9px;font-size:.82rem;font-weight:800}
+footer{text-align:center;color:var(--muted);font-size:.78rem;margin:18px 0}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.topics{grid-template-columns:repeat(2,1fr)}.answers,.reportgrid{grid-template-columns:1fr}.app{padding:11px}.card{padding:16px}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top"><div class="brand"><div class="logo">➗</div><div><h1>Math Masti Quest</h1><div class="sub">Grade 4 • India • ICSE-friendly</div></div></div><div class="pill" id="best">🏆 Best: 0</div></div>
+
+<section id="home">
+<div class="grid">
+<div class="card hero"><div class="pill" style="display:inline-block">🎯 10-question adventure</div><h2>Become a Math Masti Master!</h2><p class="muted">Pick a topic or try a mixed quest. Every game generates fresh questions.</p><div class="topics" id="topics"></div><div class="actions"><button class="btn primary" id="start">Start Quest ▶</button><button class="btn orange" id="mixed">🎲 Mixed Practice</button></div></div>
+<div class="side">
+<div class="card"><h3>Your progress</h3><div class="stats"><div class="stat"><b id="games">0</b><small>Games</small></div><div class="stat"><b id="stars">0</b><small>Stars</small></div><div class="stat"><b id="streakBest">0</b><small>Best streak</small></div></div></div>
+<div class="card"><h3>Achievements</h3><div id="badges" class="badges"></div></div>
+<div class="card"><h3>Parent / Teacher mode</h3><p class="muted">See accuracy by topic. Progress stays on this device.</p><button class="btn secondary" id="reportBtn">View Progress Report</button></div>
+</div></div></section>
+
+<section class="game" id="game"><div class="card">
+<div class="head"><button class="btn secondary" id="homeBtn">← Home</button><div class="score"><span class="pill" id="score">⭐ 0</span><span class="pill" id="streak">🔥 0</span><span class="pill" id="timer">⏱ 0s</span></div></div>
+<div class="progress"><div id="prog"></div></div>
+<div class="qbox"><div class="qmeta"><span id="topicLabel"></span><span id="count"></span></div><div class="question" id="q"></div><div id="answers"></div><div class="hint" id="hint"></div><div class="feedback" id="feedback"></div></div>
+<div class="controls"><button class="btn secondary" id="hintBtn">💡 Hint</button><button class="btn primary" id="next" style="display:none">Next →</button></div>
+</div></section>
+
+<section class="report" id="report"><div class="card"><div class="head"><h2>Progress Report</h2><button class="btn secondary" id="reportHome">← Home</button></div><p class="muted">Accuracy is based on questions completed on this browser.</p><div class="reportgrid" id="reportGrid"></div><div class="actions"><button class="btn secondary" id="reset">Reset Progress</button></div></div></section>
+<footer>Practice game for Grade 4 mathematics. School sequencing may vary across CISCE-affiliated schools.</footer>
+</div>
+<script>
+const T=[
+['numbers','Numbers & Place Value','🔢'],['operations','Add & Subtract','➕'],['multdiv','Multiply & Divide','✖️'],['factors','Factors & Multiples','🧩'],
+['fractions','Fractions','🍕'],['decimals','Decimals','🔸'],['measurement','Measurement','📏'],['time','Time','🕒'],['money','Money','₹'],
+['geometry','Geometry','📐'],['patterns','Patterns & Data','📊'],['word','Word Problems','🧠'],['mixed','Mixed Quest','🎲']
+];
+const ids=T.filter(x=>x[0]!=='mixed').map(x=>x[0]),$=s=>document.querySelector(s),r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,p=a=>a[r(0,a.length-1)],shuffle=a=>[...a].sort(()=>Math.random()-.5);
+const key='mathMastiGrade4v2';
+let data=JSON.parse(localStorage.getItem(key)||'null')||{games:0,stars:0,best:0,bestStreak:0,topic:{}};
+ids.forEach(x=>data.topic[x]??={right:0,total:0});
+let S={topic:'mixed',n:0,total:10,score:0,streak:0,bestRun:0,start:0,timer:null,current:null,answered:false};
+function save(){localStorage.setItem(key,JSON.stringify(data));stats()}
+function mcq(q,a,o,h,t){return{kind:'mcq',q,a,o:shuffle(o),h,t}}
+function input(q,a,h,t){return{kind:'input',q,a:String(a),h,t}}
+function gen(t){
+ if(t==='mixed')t=p(ids);
+ if(t==='numbers'){let m=r(1,4);if(m===1){let n=r(1000,9999),pl=p([[1000,'thousands'],[100,'hundreds'],[10,'tens'],[1,'ones']]);return input(`What is the digit in the ${pl[1]} place of ${n}?`,Math.floor(n/pl[0])%10,'Read the number from right to left: ones, tens, hundreds, thousands.',t)}if(m===2){let n=r(1000,9999),d=p([10,100,1000]);return input(`What is the value of the digit ${Math.floor(n/d)%10} in ${n}?`,(Math.floor(n/d)%10)*d,'Digit value = digit × place value.',t)}if(m===3)return mcq('Which Roman numeral means 40?','XL',['XL','LX','XXXX','IV'],'X before L means 50 − 10.',t);let a=r(1000,9000),b=r(1000,9000);return mcq(`Which number is greater: ${a} or ${b}?`,String(Math.max(a,b)),[String(a),String(b),'They are equal','Cannot tell'],'Compare thousands first, then hundreds, tens and ones.',t)}
+ if(t==='operations'){let a=r(1000,9999),b=r(100,3000),add=Math.random()>.5;return input(`${a} ${add?'+':'−'} ${b} = ?`,add?a+b:a-b,add?'Add place values carefully.':'Subtract from right to left and regroup if needed.',t)}
+ if(t==='multdiv'){if(Math.random()>.5){let a=r(12,99),b=r(2,12);return input(`${a} × ${b} = ?`,a*b,'Break the larger number into tens and ones.',t)}let b=r(2,12),q=r(3,40);return input(`${b*q} ÷ ${b} = ?`,q,'Think: divisor × what number = dividend?',t)}
+ if(t==='factors'){let m=r(1,3);if(m===1){let n=p([12,18,20,24,30,36]);return mcq(`Which is a factor of ${n}?`,String(p([2,3,4,5,6].filter(x=>n%x===0))),shuffle([2,3,4,5,6]).map(String).slice(0,4),'A factor divides exactly with no remainder.',t)}if(m===2){let a=p([4,6,8,9,10,12]),k=r(2,8);return input(`What is the ${k}th multiple of ${a}?`,a*k,'Multiply the number by the position.',t)}let a=p([12,18,24,30]),b=p([8,16,20,28]);const gcd=(x,y)=>y?gcd(y,x%y):x;return input(`Find the HCF of ${a} and ${b}.`,gcd(a,b),'List the factors common to both numbers.',t)}
+ if(t==='fractions'){let d=p([4,5,6,8,10]),a=r(1,d-1),b=r(1,d-1);if(a+b>=d)b=1;return input(`${a}/${d} + ${b}/${d} = ?  (write as numerator/denominator)`,`${a+b}/${d}`,'Same denominator: add only the numerators.',t)}
+ if(t==='decimals'){let a=(r(10,90)/10).toFixed(1),b=(r(1,9)/10).toFixed(1);return input(`${a} + ${b} = ?`,(Number(a)+Number(b)).toFixed(1),'Line up the decimal points.',t)}
+ if(t==='measurement'){let m=r(1,3);if(m===1){let x=r(2,9);return input(`${x} metres = ? centimetres`,x*100,'1 metre = 100 centimetres.',t)}if(m===2){let l=r(4,15),w=r(2,10);return input(`A rectangle is ${l} cm long and ${w} cm wide. What is its perimeter in cm?`,2*(l+w),'Perimeter = 2 × (length + width).',t)}let l=r(4,14),w=r(2,9);return input(`Area of a ${l} cm × ${w} cm rectangle = ? cm²`,l*w,'Area = length × width.',t)}
+ if(t==='time'){let h=r(1,10),m=p([0,15,30,45]),add=p([30,45,60,90]);let mins=h*60+m+add,hh=Math.floor(mins/60),mm=mins%60;if(hh>12)hh-=12;return input(`A movie starts at ${h}:${String(m).padStart(2,'0')} and lasts ${add} minutes. What time does it end?`,`${hh}:${String(mm).padStart(2,'0')}`,'Add the minutes; 60 minutes makes 1 hour.',t)}
+ if(t==='money'){let a=r(20,300),b=r(10,Math.min(150,a));return input(`You have ₹${a} and spend ₹${b}. How much money remains?`,a-b,'Money remaining = money you had − money spent.',t)}
+ if(t==='geometry'){let m=r(1,3);if(m===1)return mcq('How many right angles does a rectangle have?','4',['1','2','3','4'],'Every corner of a rectangle is a right angle.',t);if(m===2)return mcq('Which shape has no straight sides?','Circle',['Triangle','Square','Circle','Rectangle'],'Think about the boundary of each shape.',t);return mcq('A triangle has how many sides?','3',['2','3','4','5'],'Tri means three.',t)}
+ if(t==='patterns'){let a=r(3,20),d=r(2,9);return input(`Complete the pattern: ${a}, ${a+d}, ${a+2*d}, ${a+3*d}, ?`,a+4*d,'Find the amount added each time.',t)}
+ let m=r(1,4);if(m===1){let boxes=r(4,10),each=r(12,30);return input(`${boxes} boxes have ${each} pencils each. How many pencils are there?`,boxes*each,'Equal groups mean multiplication.',t)}if(m===2){let a=r(400,900),b=r(100,300);return input(`A library had ${a} books. ${b} were borrowed. How many remain?`,a-b,'“Remain” tells you to subtract.',t)}if(m===3){let kids=r(3,8),each=r(15,30),extra=r(5,20);return input(`${kids} children collect ${each} stickers each and a teacher adds ${extra} more. How many stickers altogether?`,kids*each+extra,'Multiply first, then add the extra stickers.',t)}let rows=r(5,9),seats=r(6,12);return input(`A hall has ${rows} rows with ${seats} seats in each row. How many seats in total?`,rows*seats,'Rows × seats per row.',t)
+}
+function topics(){let g=$('#topics');g.innerHTML='';T.forEach(([id,name,ico])=>{let b=document.createElement('button');b.className='topic'+(S.topic===id?' active':'');b.innerHTML=`<span>${ico}</span>${name}`;b.onclick=()=>{S.topic=id;topics()};g.appendChild(b)})}
+function stats(){$('#games').textContent=data.games;$('#stars').textContent=data.stars;$('#streakBest').textContent=data.bestStreak;$('#best').textContent='🏆 Best: '+data.best;let a=[];if(data.games)a.push('🎒 First Quest');if(data.bestStreak>=5)a.push('🔥 5 Streak');if(data.best>=900)a.push('🏆 Math Ace');if(data.stars>=50)a.push('⭐ Star Collector');$('#badges').innerHTML=a.length?a.map(x=>`<span class="badge">${x}</span>`).join(''):'<span class="muted">Play to unlock badges!</span>'}
+function show(x){$('#home').style.display=x==='home'?'block':'none';$('#game').classList.toggle('active',x==='game');$('#report').classList.toggle('active',x==='report')}
+function start(topic=S.topic){S.topic=topic;S.n=0;S.score=0;S.streak=0;S.bestRun=0;S.start=Date.now();clearInterval(S.timer);S.timer=setInterval(()=>$('#timer').textContent='⏱ '+Math.floor((Date.now()-S.start)/1000)+'s',1000);show('game');next()}
+function next(){if(S.n>=S.total)return finish();S.answered=false;S.current=gen(S.topic);S.n++;$('#prog').style.width=((S.n-1)/S.total*100)+'%';$('#count').textContent=S.n+' / '+S.total;let meta=T.find(x=>x[0]===S.current.t);$('#topicLabel').textContent=meta[2]+' '+meta[1];$('#q').textContent=S.current.q;$('#hint').textContent=S.current.h;$('#hint').classList.remove('show');$('#feedback').textContent='';$('#next').style.display='none';$('#hintBtn').style.display='inline-block';render();pills()}
+function render(){let a=$('#answers');a.innerHTML='';let q=S.current;if(q.kind==='mcq'){let d=document.createElement('div');d.className='answers';q.o.forEach(x=>{let b=document.createElement('button');b.className='answer';b.textContent=x;b.onclick=()=>submit(x,b);d.appendChild(b)});a.appendChild(d)}else{let i=document.createElement('input');i.className='input';i.placeholder='Type your answer';i.onkeydown=e=>{if(e.key==='Enter')submit(i.value,i)};let w=document.createElement('div');w.style.textAlign='center';w.appendChild(i);let br=document.createElement('br');w.appendChild(br);let b=document.createElement('button');b.className='btn primary';b.style.marginTop='10px';b.textContent='Check Answer';b.onclick=()=>submit(i.value,i);w.appendChild(b);a.appendChild(w);setTimeout(()=>i.focus(),50)}}
+const norm=x=>String(x).trim().toLowerCase().replace(/[₹, ]/g,'');
+function submit(v,el){if(S.answered||!String(v).trim())return;S.answered=true;let q=S.current,ok=norm(v)===norm(q.a);data.topic[q.t].total++;if(ok){data.topic[q.t].right++;S.streak++;S.bestRun=Math.max(S.bestRun,S.streak);let bonus=Math.min(50,S.streak*10);S.score+=100+bonus;$('#feedback').textContent='✅ Correct! +'+(100+bonus);el.classList?.add('correct')}else{S.streak=0;$('#feedback').innerHTML='❌ Good try. Correct answer: <b>'+q.a+'</b>';el.classList?.add('wrong');document.querySelectorAll('.answer').forEach(b=>{if(norm(b.textContent)===norm(q.a))b.classList.add('correct')})}document.querySelectorAll('.answer,.input').forEach(x=>x.disabled=true);$('#hintBtn').style.display='none';$('#next').style.display='inline-block';$('#prog').style.width=(S.n/S.total*100)+'%';pills();save()}
+function pills(){$('#score').textContent='⭐ '+S.score;$('#streak').textContent='🔥 '+S.streak}
+function finish(){clearInterval(S.timer);data.games++;data.stars+=Math.round(S.score/100);data.best=Math.max(data.best,S.score);data.bestStreak=Math.max(data.bestStreak,S.bestRun);save();let sec=Math.floor((Date.now()-S.start)/1000);$('#q').innerHTML=(S.score>=1050?'🌟 Outstanding!':S.score>=800?'🎉 Great work!':'💪 Nice practice!')+`<br><small>Score: ${S.score} • Time: ${sec}s • Best streak: ${S.bestRun}</small>`;$('#answers').innerHTML='<div style="text-align:center"><button class="btn primary" id="again">Play Again</button> <button class="btn secondary" id="done">Home</button></div>';$('#again').onclick=()=>start(S.topic);$('#done').onclick=()=>show('home');$('#feedback').textContent='';$('#hintBtn').style.display='none';$('#next').style.display='none';$('#topicLabel').textContent='Quest complete';$('#count').textContent='10 / 10';$('#prog').style.width='100%'}
+function report(){let g=$('#reportGrid');g.innerHTML='';ids.forEach(id=>{let t=T.find(x=>x[0]===id),x=data.topic[id],pct=x.total?Math.round(x.right/x.total*100):0,d=document.createElement('div');d.className='ritem';d.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px"><b>${t[2]} ${t[1]}</b><span>${x.right}/${x.total} • ${pct}%</span></div><div class="bar"><div style="width:${pct}%"></div></div><div class="muted" style="margin-top:6px;font-size:.82rem">${x.total<5?'Do at least 5 questions for a useful trend.':pct>=80?'Strong area.':pct>=60?'Developing well — practise a little more.':'Focus area — revisit this topic.'}</div>`;g.appendChild(d)});show('report')}
+$('#start').onclick=()=>start();$('#mixed').onclick=()=>{S.topic='mixed';topics();start('mixed')};$('#homeBtn').onclick=()=>{clearInterval(S.timer);show('home')};$('#hintBtn').onclick=()=>$('#hint').classList.add('show');$('#next').onclick=next;$('#reportBtn').onclick=report;$('#reportHome').onclick=()=>show('home');$('#reset').onclick=()=>{if(confirm('Reset all saved progress?')){localStorage.removeItem(key);location.reload()}};
+topics();stats();show('home');
+</script>
+</body>
+</html>
