@@ -4,6 +4,7 @@ const E = require('../questions.js');
 const cleanNum = s => Number(String(s).replace(/,/g, ''));
 let count = 0;
 let mcqCount = 0;
+const variants = Object.fromEntries(E.TOPICS.map(t => [t, new Set()]));
 
 function semanticCheck(q) {
   let m;
@@ -67,9 +68,10 @@ assert.ok(E.isCorrect('01:15', '1:15'), 'Equivalent time formatting must be acce
 
 for (const topic of E.TOPICS) {
   for (let difficulty = 1; difficulty <= 5; difficulty++) {
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 500; i++) {
       const q = E.generate(topic, difficulty);
       count++;
+      variants[topic].add(q.variant);
       const result = E.validateQuestion(q);
       assert.ok(result.ok, topic + ' L' + difficulty + ': ' + result.reason);
 
@@ -87,4 +89,12 @@ for (const topic of E.TOPICS) {
   }
 }
 
-console.log('Question engine tests passed:', count, 'questions;', mcqCount, 'MCQs.');
+for (const topic of E.TOPICS) {
+  assert.strictEqual(
+    variants[topic].size,
+    E.VARIANT_COUNTS[topic],
+    topic + ' should exercise all ' + E.VARIANT_COUNTS[topic] + ' question variants but saw: ' + [...variants[topic]].join(', ')
+  );
+}
+
+console.log('Question engine tests passed:', count, 'questions;', mcqCount, 'MCQs; all topic variants covered.');
