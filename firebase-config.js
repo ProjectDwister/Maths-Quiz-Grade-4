@@ -1,13 +1,11 @@
 // Firebase web configuration for Math Masti Quest.
-//
-// This configuration identifies the Firebase project; it is not a password or server secret.
-// Protection of user data is enforced by Firebase Authentication + Firestore Security Rules.
-//
-// Replace the placeholder values with the Web App configuration from:
-// Firebase Console -> Project settings -> Your apps -> Web app.
+// This is a public web-app configuration, not a server secret.
+// User-data protection is enforced by Firebase Authentication + Firestore Security Rules.
 window.MATH_MASTI_FIREBASE_CONFIG = {
-  apiKey: "REPLACE_WITH_FIREBASE_API_KEY",
-  authDomain: "REPLACE_WITH_PROJECT_ID.firebaseapp.com",
-  projectId: "REPLACE_WITH_PROJECT_ID",
-  appId: "REPLACE_WITH_FIREBASE_APP_ID"
+  apiKey: "AIzaSyCkAV0KEDC2xmdmjKX9S93s-mXqRQLWD34",
+  authDomain: "maths-masti-quest.firebaseapp.com",
+  projectId: "maths-masti-quest",
+  storageBucket: "maths-masti-quest.firebasestorage.app",
+  messagingSenderId: "664140457899",
+  appId: "1:664140457899:web:80cc47421764c5639514ee"
 };
